@@ -1,8 +1,11 @@
 -module(snitch_resolver).
 
 -include_lib("kernel/src/inet_dns.hrl").
-
--define(DNS_SERVERS, [{8,8,8,8},{1,1,1,1},{9,9,9,9}]).
+%% 208.67.222.222
+%% 208.67.220.220
+%% 1.1.1.1
+%% 9.9.9.9
+-define(DNS_SERVERS, [{8,8,8,8},{8,8,4,4},{1,1,1,1},{9,9,9,9}]).
 
 -export([do_query/2]).
 
