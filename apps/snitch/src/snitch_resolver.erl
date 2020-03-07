@@ -15,5 +15,5 @@ do_query(Domain, Type) ->
     R#dns_rec.anlist.
 
 do_pure(Domain, Type) ->
-    Answer = do_query(Domain, Type),
-    lists:filter(fun (R) -> R#dns_rr.type == Type end, Answer).
+    Answers = do_query(Domain, Type),
+    lists:filter(fun (R) -> R#dns_rr.type == Type end, Answers).
