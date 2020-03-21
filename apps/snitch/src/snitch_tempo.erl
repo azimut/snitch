@@ -1,9 +1,16 @@
 -module(snitch_tempo).
--export([get_random_time/0,has_time_expired/1]).
+-export(
+   [
+    get_future_gregorian/0,
+    has_gregorian_passed/1
+   ]).
 
-get_random_time() ->
-    { rand:uniform(24), rand:uniform(60), rand:uniform(60) }.
+get_future_gregorian() ->
+    Now = calendar:datetime_to_gregorian_seconds(calendar:local_time()),
+    Offset = rand:uniform(60 * 60 * 24),
+    Now + Offset.
 
-has_time_expired({EH,EM,_}) ->
-    {_, {NH, NM, _}} = calendar:local_time(),
-    (NH > EH) and (NM > EM).
+has_gregorian_passed(Gregorian) ->
+    NowGregorian = calendar:datetime_to_gregorian_seconds(
+                     calendar:local_time()),
+    NowGregorian > Gregorian.
