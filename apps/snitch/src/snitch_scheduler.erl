@@ -6,7 +6,7 @@
 %%% @end
 %%% Created :  6 Mar 2020 by azimut <azimut.github@protonmail.com>
 %%%-------------------------------------------------------------------
--module(snitch_control).
+-module(snitch_scheduler).
 
 -behaviour(gen_server).
 
@@ -19,7 +19,7 @@
 
 -define(SERVER, ?MODULE).
 
--record(state, {domains=[],expires=[]}).
+-record(state, {domains_dict=dict:new()}).
 
 %%%===================================================================
 %%% API
@@ -34,6 +34,7 @@
           {error, Error :: {already_started, pid()}} |
           {error, Error :: term()} |
           ignore.
+
 start_link() ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
@@ -55,9 +56,9 @@ start_link() ->
 
 init([]) ->
     process_flag(trap_exit, true),
-    Domains = ["this.com", "that.net"],
-    {ok, #state{domains=Domains,
-                expires=[snitch_tempo:get_random_time() || _ <- Domains]}}.
+    Domains = get_domains(),
+    Domains_Dict = domains_to_dict(Domains),
+    {ok, #state{domains_dict=Domains_Dict}}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -74,6 +75,11 @@ init([]) ->
           {noreply , NewState :: term(), hibernate} |
           {stop    , Reason   :: term(), Reply :: term(), NewState :: term()} |
           {stop    , Reason   :: term(), NewState :: term()}.
+
+handle_call({get, Domain}, _From, State) ->
+    Domains = State#state.domains_dict,
+    Time = dict:fetch(Domain, Domains),
+    {reply, Time, State};
 handle_call(_Request, _From, State) ->
     Reply = ok,
     {reply, Reply, State}.
@@ -89,6 +95,13 @@ handle_call(_Request, _From, State) ->
           {noreply, NewState :: term(), Timeout :: timeout()} |
           {noreply, NewState :: term(), hibernate} |
           {stop   , Reason   :: term(), NewState :: term()}.
+
+handle_cast({add, RawDomain}, State) ->
+    Time = snitch_tempo:get_future_gregorian(),
+    Domain = validate_domain(RawDomain),
+    Domains = State#state.domains_dict,
+    NewDomains = dict:store(Domain, Time, Domains),
+    {noreply, State#state{domains_dict=NewDomains}};
 handle_cast(_Request, State) ->
     {noreply, State}.
 
@@ -103,6 +116,13 @@ handle_cast(_Request, State) ->
           {noreply, NewState :: term(), Timeout :: timeout()} |
           {noreply, NewState :: term(), hibernate} |
           {stop, Reason :: normal | term(), NewState :: term()}.
+
+
+handle_info(tick, State) ->
+    schedule(),
+    Dict = State#state.domains_dict,
+    NewDict = dict:map(fun process_domain/2, Dict),
+    {noreply, State#state{domains_dict=NewDict}};
 handle_info(_Info, State) ->
     {noreply, State}.
 
@@ -149,3 +169,37 @@ format_status(_Opt, Status) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+
+validate_domain(Domain) ->
+    string:lowercase(Domain).
+
+get_domains() ->
+    Domains = ["this.com", "that.net"],
+    lists:map(fun validate_domain/1, Domains).
+
+domains_to_dict(Domains) ->
+    L = [{D, snitch_tempo:get_future_gregorian()} || D <- Domains],
+    dict:from_list(L).
+
+%%
+%% Tick
+%%
+
+schedule(Seconds) ->
+    erlang:send_after(Seconds * 1000, erlang:self(), tick).
+schedule() ->
+    schedule(30).
+
+alert_domain(Domain) ->
+    Domain.
+
+scan_domain(_,Gregorian,false) ->
+    Gregorian;
+scan_domain(Domain,_, true) ->
+    alert_domain(Domain),
+    snitch_tempo:get_future_gregorian().
+
+process_domain(Domain, Gregorian) ->
+    Expired = snitch_tempo:has_gregorian_passed(Gregorian),
+    scan_domain(Domain, Gregorian, Expired).
+
