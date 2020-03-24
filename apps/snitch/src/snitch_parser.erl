@@ -1,6 +1,7 @@
 -module(snitch_parser).
 -include_lib("kernel/src/inet_dns.hrl").
--export([process_domain/1]).
+-export([process_domain/1,
+         query_and_store/2]).
 
 %% API
 
@@ -28,11 +29,11 @@ query_and_store(Domain, cname) ->
     A = snitch_resolver:do_query(Domain, a),
     CName = lists:filter(IsCName, A),
     Data = answer_data(CName),
-    snitch_store:store(Domain, cname, Data);
+    snitch_store:store_and_alert(Domain, cname, Data);
 query_and_store(Domain, Type)  ->
     Records = snitch_resolver:do_pure(Domain, Type),
     Data = answer_data(Records),
-    snitch_store:store(Domain, Type, Data).
+    snitch_store:store_and_alert(Domain, Type, Data).
 
 process_domain(Domain, []) ->
     query_and_store(Domain, mx),

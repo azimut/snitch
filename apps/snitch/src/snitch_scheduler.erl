@@ -18,6 +18,7 @@
          terminate/2, code_change/3, format_status/2]).
 
 -define(SERVER, ?MODULE).
+-define(TABLE_NAME, mytable).
 
 -record(state, {domains_dict=dict:new()}).
 
@@ -56,6 +57,7 @@ start_link() ->
 
 init([]) ->
     process_flag(trap_exit, true),
+    ets:new(?TABLE_NAME, [bag, public, named_table]),
     Domains = get_domains(),
     Domains_Dict = domains_to_dict(Domains),
     {ok, #state{domains_dict=Domains_Dict}}.
@@ -174,7 +176,7 @@ validate_domain(Domain) ->
     string:lowercase(Domain).
 
 get_domains() ->
-    Domains = ["this.com", "that.net"],
+    Domains = ["tesla.com","starbucks.com"],
     lists:map(fun validate_domain/1, Domains).
 
 domains_to_dict(Domains) ->
@@ -191,7 +193,7 @@ schedule() ->
     schedule(30).
 
 alert_domain(Domain) ->
-    Domain.
+    erlang:spawn(snitch_parser, process_domain, [Domain]). % YOLO
 
 scan_domain(_,Gregorian,false) ->
     Gregorian;
