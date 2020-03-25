@@ -8,8 +8,18 @@
     lookup/2
    ]).
 
+%% Flatten nested list of strings
+%% https://stackoverflow.com/questions/2911420/erlang-flattening-a-list-of-strings
+slab([]) ->
+    [];
+slab([F|R]) ->
+    case io_lib:char_list(F) of
+        true -> [F|slab(R)];
+        false -> slab(F) ++ slab(R)
+    end.
+
 lookup(Domain, Type) ->
-    list:flatten(
+    slab(
       ets:match(?TABLE_NAME, {Domain, Type, '$1'})).
 
 store(Domain, Type, List) ->
@@ -23,9 +33,9 @@ alert(Domain, Type, New, Old) ->
     lists:foreach(fun (S) -> io:format("NEW~n~s~n",[S]) end, New),
     true.
 
-alert_on_difference(_Domain, _Type, ListA,ListA) ->
-    false;
-alert_on_difference(Domain, Type, New, Old) ->
+alert_on_difference(_Domain, _Type, ListA,ListA) -> false;
+alert_on_difference(_Domain, _Type, _New, [])    -> false;
+alert_on_difference(Domain, Type, New, Old)      ->
     alert(Domain, Type, New, Old).
 
 store_and_alert(Domain, Type, List) ->
