@@ -19,6 +19,8 @@
 
 -define(SERVER, ?MODULE).
 -define(TABLE_NAME, mytable).
+-define(DEFAULT_TICK, 60).
+-define(INIT_TICK, 5).
 
 -record(state, {domains_dict=dict:new()}).
 
@@ -60,6 +62,7 @@ init([]) ->
     ets:new(?TABLE_NAME, [bag, public, named_table]),
     Domains = get_domains(),
     Domains_Dict = domains_to_dict(Domains),
+    schedule(?INIT_TICK),
     {ok, #state{domains_dict=Domains_Dict}}.
 
 %%--------------------------------------------------------------------
@@ -78,7 +81,15 @@ init([]) ->
           {stop    , Reason   :: term(), Reply :: term(), NewState :: term()} |
           {stop    , Reason   :: term(), NewState :: term()}.
 
-handle_call({get, Domain}, _From, State) ->
+handle_call({get, Domain}, From, State) ->
+    io:format("ON get LIMBO~n",[]),
+    From ! wot,
+    Domains = State#state.domains_dict,
+    Time = dict:fetch(Domain, Domains),
+    {reply, Time, State};
+handle_call({get, Domain, Me}, _From, State) ->
+    io:format("ON get LIMBO~n",[]),
+    Me ! wot,
     Domains = State#state.domains_dict,
     Time = dict:fetch(Domain, Domains),
     {reply, Time, State};
@@ -118,7 +129,6 @@ handle_cast(_Request, State) ->
           {noreply, NewState :: term(), Timeout :: timeout()} |
           {noreply, NewState :: term(), hibernate} |
           {stop, Reason :: normal | term(), NewState :: term()}.
-
 
 handle_info(tick, State) ->
     schedule(),
@@ -176,7 +186,7 @@ validate_domain(Domain) ->
     string:lowercase(Domain).
 
 get_domains() ->
-    Domains = ["tesla.com","starbucks.com"],
+    Domains = ["tesla.com","starbucks.com","google.com"],
     lists:map(fun validate_domain/1, Domains).
 
 domains_to_dict(Domains) ->
@@ -190,7 +200,7 @@ domains_to_dict(Domains) ->
 schedule(Seconds) ->
     erlang:send_after(Seconds * 1000, erlang:self(), tick).
 schedule() ->
-    schedule(30).
+    schedule(?DEFAULT_TICK).
 
 alert_domain(Domain) ->
     erlang:spawn(snitch_parser, process_domain, [Domain]). % YOLO

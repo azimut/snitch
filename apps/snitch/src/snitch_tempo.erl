@@ -7,10 +7,10 @@
 
 get_future_gregorian() ->
     Now = calendar:datetime_to_gregorian_seconds(calendar:local_time()),
-    Offset = rand:uniform(60 * 60 * 24),
+    Offset = rand:uniform(60 * 10 * 1),
     Now + Offset.
 
 has_gregorian_passed(Gregorian) ->
     NowGregorian = calendar:datetime_to_gregorian_seconds(
                      calendar:local_time()),
-    NowGregorian > Gregorian.
+    NowGregorian >= Gregorian.

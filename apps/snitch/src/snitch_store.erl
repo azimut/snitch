@@ -9,8 +9,8 @@
    ]).
 
 lookup(Domain, Type) ->
-    [[R]] = ets:match(?TABLE_NAME, {Domain, Type, '$1'}),
-    R.
+    list:flatten(
+      ets:match(?TABLE_NAME, {Domain, Type, '$1'})).
 
 store(Domain, Type, List) ->
     ets:insert(?TABLE_NAME, {Domain, Type, List}),
