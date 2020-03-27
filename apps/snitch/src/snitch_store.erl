@@ -1,6 +1,6 @@
 -module(snitch_store).
 
--define(TABLE_NAME, mytable).
+-include("db.hrl").
 -export(
    [
     store/3,
