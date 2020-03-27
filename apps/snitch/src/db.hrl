@@ -4,4 +4,6 @@
 -define(SERVER, ?MODULE).
 -define(TABLE_NAME, mytable).
 -define(DEFAULT_TICK, 60).
+-define(DEFAULT_CHECKPOINT, 5 * 60 * 1000).
 -define(INIT_TICK, 5).
+-define(INIT_CHECKPOINT, 10 * 1000).

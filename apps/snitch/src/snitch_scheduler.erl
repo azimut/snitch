@@ -57,7 +57,8 @@ init([]) ->
     ets:new(?TABLE_NAME, [bag, public, named_table]),
     snitch_disk:load(),
     Dict = snitch_file:load(),
-    schedule(?INIT_TICK),
+    schedule(tick, ?INIT_TICK),
+    schedule(checkpoint, ?INIT_CHECKPOINT),
     {ok, #state{domains_dict=Dict}}.
 
 %%--------------------------------------------------------------------
@@ -129,10 +130,14 @@ handle_cast(Request, State) ->
           {stop, Reason :: normal | term(), NewState :: term()}.
 
 handle_info(tick, State) ->
-    schedule(),
+    schedule(tick),
     Dict = State#state.domains_dict,
     NewDict = dict:map(fun process_domain/2, Dict),
     {noreply, State#state{domains_dict=NewDict}};
+handle_info(checkpoint, State) ->
+    schedule(checkpoint, ?DEFAULT_CHECKPOINT),
+    snitch_disk:save(),
+    {noreply, State};
 handle_info(Info, State) ->
     io:format("Unexpected _info: ~p~n", [Info]),
     {noreply, State}.
@@ -189,10 +194,11 @@ validate_domain(Domain) ->
 %% Tick
 %%
 
-schedule(Seconds) ->
-    erlang:send_after(Seconds * 1000, erlang:self(), tick).
-schedule() ->
-    schedule(?DEFAULT_TICK).
+schedule(Msg, Seconds) ->
+    erlang:send_after(Seconds * 1000, erlang:self(), Msg).
+
+schedule(Msg) ->
+    schedule(Msg, ?DEFAULT_TICK).
 
 alert_domain(Domain) ->
     erlang:spawn(snitch_parser, process_domain, [Domain]). % YOLO
