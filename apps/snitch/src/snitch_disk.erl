@@ -1,10 +1,6 @@
 -module(snitch_disk).
+-export([save/0,load/0]).
 -include("db.hrl").
--export(
-   [
-    save/0,
-    load/0
-   ]).
 
 %% https://github.com/bernardd/Conway
 %% /blob/d1af91a0b535978995c9644a9a91a2e658e478a6/cell_store.erl

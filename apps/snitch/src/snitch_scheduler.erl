@@ -56,10 +56,9 @@ init([]) ->
     process_flag(trap_exit, true),
     ets:new(?TABLE_NAME, [bag, public, named_table]),
     snitch_disk:load(),
-    Domains = get_domains("/home/sendai/snitch_domains.txt"),
-    Domains_Dict = domains_to_dict(Domains),
+    Dict = snitch_file:load(),
     schedule(?INIT_TICK),
-    {ok, #state{domains_dict=Domains_Dict}}.
+    {ok, #state{domains_dict=Dict}}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -107,6 +106,12 @@ handle_cast({add, RawDomain}, State) ->
     Domains = State#state.domains_dict,
     NewDomains = dict:store(Domain, Time, Domains),
     {noreply, State#state{domains_dict=NewDomains}};
+handle_cast(reload, State) ->
+    NewState = snitch_file:load(),
+    {noreply, State#state{domains_dict=NewState}};
+handle_cast(checkpoint, State) ->
+    snitch_disk:save(),
+    {noreply, State};
 handle_cast(Request, State) ->
     io:format("Unexpected _cast: ~p~n", [Request]),
     {noreply, State}.
@@ -179,17 +184,6 @@ format_status(_Opt, Status) ->
 
 validate_domain(Domain) ->
     string:lowercase(Domain).
-
-get_domains(File) ->
-    {ok, Binary} = file:read_file(File),
-    %%Domains = ["tesla.com","starbucks.com","google.com"],
-    Domains = string:tokens(
-                erlang:binary_to_list(Binary), "\n\r\t"),
-    lists:map(fun validate_domain/1, Domains).
-
-domains_to_dict(Domains) ->
-    L = [{D, snitch_tempo:get_future_gregorian()} || D <- Domains],
-    dict:from_list(L).
 
 %%
 %% Tick
