@@ -16,12 +16,7 @@
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3, format_status/2]).
-
--define(SERVER, ?MODULE).
--define(TABLE_NAME, mytable).
--define(DEFAULT_TICK, 60).
--define(INIT_TICK, 5).
-
+-include("db.hrl").
 -record(state, {domains_dict=dict:new()}).
 
 %%%===================================================================
@@ -60,7 +55,8 @@ start_link() ->
 init([]) ->
     process_flag(trap_exit, true),
     ets:new(?TABLE_NAME, [bag, public, named_table]),
-    Domains = get_domains(),
+    snitch_disk:load(),
+    Domains = get_domains("/home/sendai/snitch_domains.txt"),
     Domains_Dict = domains_to_dict(Domains),
     schedule(?INIT_TICK),
     {ok, #state{domains_dict=Domains_Dict}}.
@@ -81,18 +77,14 @@ init([]) ->
           {stop    , Reason   :: term(), Reply :: term(), NewState :: term()} |
           {stop    , Reason   :: term(), NewState :: term()}.
 
-handle_call({get, Domain}, From, State) ->
-    io:format("ON get LIMBO~n",[]),
-    From ! wot,
+handle_call({get, Domain}, _From, State) ->
     Domains = State#state.domains_dict,
     Time = dict:fetch(Domain, Domains),
     {reply, Time, State};
-handle_call({get, Domain, Me}, _From, State) ->
-    io:format("ON get LIMBO~n",[]),
-    Me ! wot,
+handle_call(all, _From, State) ->
     Domains = State#state.domains_dict,
-    Time = dict:fetch(Domain, Domains),
-    {reply, Time, State};
+    All = dict:fetch_keys(Domains),
+    {reply, All, State};
 handle_call(_Request, _From, State) ->
     Reply = ok,
     {reply, Reply, State}.
@@ -115,7 +107,8 @@ handle_cast({add, RawDomain}, State) ->
     Domains = State#state.domains_dict,
     NewDomains = dict:store(Domain, Time, Domains),
     {noreply, State#state{domains_dict=NewDomains}};
-handle_cast(_Request, State) ->
+handle_cast(Request, State) ->
+    io:format("Unexpected _cast: ~p~n", [Request]),
     {noreply, State}.
 
 %%--------------------------------------------------------------------
@@ -135,7 +128,8 @@ handle_info(tick, State) ->
     Dict = State#state.domains_dict,
     NewDict = dict:map(fun process_domain/2, Dict),
     {noreply, State#state{domains_dict=NewDict}};
-handle_info(_Info, State) ->
+handle_info(Info, State) ->
+    io:format("Unexpected _info: ~p~n", [Info]),
     {noreply, State}.
 
 %%--------------------------------------------------------------------
@@ -150,6 +144,7 @@ handle_info(_Info, State) ->
 -spec terminate(Reason :: normal | shutdown | {shutdown, term()} | term(),
                 State :: term()) -> any().
 terminate(_Reason, _State) ->
+    snitch_disk:save(),
     ok.
 
 %%--------------------------------------------------------------------
@@ -185,8 +180,11 @@ format_status(_Opt, Status) ->
 validate_domain(Domain) ->
     string:lowercase(Domain).
 
-get_domains() ->
-    Domains = ["tesla.com","starbucks.com","google.com"],
+get_domains(File) ->
+    {ok, Binary} = file:read_file(File),
+    %%Domains = ["tesla.com","starbucks.com","google.com"],
+    Domains = string:tokens(
+                erlang:binary_to_list(Binary), "\n\r\t"),
     lists:map(fun validate_domain/1, Domains).
 
 domains_to_dict(Domains) ->
