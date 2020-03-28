@@ -3,7 +3,7 @@
 -define(DNS_FILE, "/home/sendai/snitch_domains.txt").
 -define(SERVER, ?MODULE).
 -define(TABLE_NAME, mytable).
--define(DEFAULT_TICK, 60).
--define(DEFAULT_CHECKPOINT, 5 * 60 * 1000).
+-define(DEFAULT_TICK, 5 * 60 * 60).
 -define(INIT_TICK, 5).
+-define(DEFAULT_CHECKPOINT, 5 * 60 * 1000).
 -define(INIT_CHECKPOINT, 10 * 1000).

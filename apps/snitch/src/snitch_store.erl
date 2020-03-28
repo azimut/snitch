@@ -29,6 +29,8 @@ notify(Title, Msg) ->
     S = io_lib:format("/usr/bin/notify-send --urgency critical '~s' '~s'", [Title, Msg]),
     os:cmd(S).
 
+alert(_,a,New,_)    when erlang:length(New) =:= 1 -> ok;
+alert(_,aaaa,New,_) when erlang:length(New) =:= 1 -> ok;
 alert(Domain, Type, New=[H|_],_)
   when erlang:length(New) =:= 1 ->
     io:format("NEW! data for domain ~s~n", [Domain]),
