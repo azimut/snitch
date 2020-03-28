@@ -54,7 +54,7 @@ start_link() ->
 
 init([]) ->
     process_flag(trap_exit, true),
-    ets:new(?TABLE_NAME, [bag, public, named_table]),
+    snitch_store:init(),
     snitch_disk:load(),
     Dict = snitch_file:load(),
     schedule(tick, ?INIT_TICK),
@@ -107,6 +107,11 @@ handle_cast({add, RawDomain}, State) ->
     Domains = State#state.domains_dict,
     NewDomains = dict:store(Domain, Time, Domains),
     {noreply, State#state{domains_dict=NewDomains}};
+handle_cast({delete, Domain}, State) ->
+    Dict = State#state.domains_dict,
+    NewDict = dict:erase(Domain, Dict),
+    snitch_store:delete(Domain),
+    {noreply, State#state{domains_dict=NewDict}};
 handle_cast(reload, State) ->
     NewState = snitch_file:load(),
     {noreply, State#state{domains_dict=NewState}};

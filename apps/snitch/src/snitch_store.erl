@@ -3,11 +3,19 @@
 -include("db.hrl").
 -export(
    [
+    init/0,
+    delete/1,
     store/3,
     store_and_alert/3
    ]).
 
 %% API
+
+init() ->
+    ets:new(?TABLE_NAME, [bag, public, named_table]).
+
+delete(Domain) ->
+    ets:delete(?TABLE_NAME, Domain).
 
 store(Domain, Type, Data) ->
     Time = calendar:local_time(),
