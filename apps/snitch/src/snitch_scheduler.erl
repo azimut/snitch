@@ -194,7 +194,7 @@ schedule(Msg) ->
     schedule(Msg, ?DEFAULT_TICK).
 
 query(Domain) ->
-    erlang:spawn(snitch_parser, process_domain, [Domain]),
+    erlang:spawn(snitch_parser, query_all, [Domain]),
     snitch_tempo:get_future_gregorian().
 
 process_domain(Domain, Gregorian) ->
