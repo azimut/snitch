@@ -3,10 +3,13 @@ snitch
 
 An OTP application
 
-%% inet_res:nslookup("tesla.com",in,txt,[{{8,8,8,8}, 53}]).
-%% inet_res:lookup("www.starbucks.com",in,cname,[{nameservers, [{{8,8,8,8}, 53}]}]).
-
 Build
 -----
 
     $ rebar3 compile
+
+TODO
+----
+* Make multiple requests on first add of domain to get most of IP's from DNS
+* Cold down domains
+* Replace with mnesia?
