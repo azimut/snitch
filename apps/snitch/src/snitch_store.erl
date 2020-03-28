@@ -50,7 +50,7 @@ alert_on_difference(Domain, Type, Dns, Ets) ->
         false -> alert(Domain, Type, Dns, Ets)
     end.
 
-store_on_difference(_,_,_Dns=[],_)           -> ok;
+store_on_difference(_,_,_Dns=[],_)          -> ok;
 store_on_difference(Domain, Type, Dns, Ets) ->
     case helpers:is_subset(Dns, Ets) of
         true  -> ok;

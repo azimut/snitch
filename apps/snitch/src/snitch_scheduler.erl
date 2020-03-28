@@ -103,7 +103,7 @@ handle_call(_Request, _From, State) ->
 
 handle_cast({add, RawDomain}, State) ->
     Time = snitch_tempo:get_future_gregorian(),
-    Domain = validate_domain(RawDomain),
+    Domain = string:lowercase(RawDomain),
     Domains = State#state.domains_dict,
     NewDomains = dict:store(Domain, Time, Domains),
     {noreply, State#state{domains_dict=NewDomains}};
@@ -187,29 +187,20 @@ format_status(_Opt, Status) ->
 %%% Internal functions
 %%%===================================================================
 
-validate_domain(Domain) ->
-    string:lowercase(Domain).
-
-%%
-%% Tick
-%%
-
 schedule(Msg, Seconds) ->
     erlang:send_after(Seconds * 1000, erlang:self(), Msg).
 
 schedule(Msg) ->
     schedule(Msg, ?DEFAULT_TICK).
 
-alert_domain(Domain) ->
-    erlang:spawn(snitch_parser, process_domain, [Domain]). % YOLO
-
-scan_domain(_,Gregorian,false) ->
-    Gregorian;
-scan_domain(Domain,_, true) ->
-    alert_domain(Domain),
+query(Domain) ->
+    erlang:spawn(snitch_parser, process_domain, [Domain]),
     snitch_tempo:get_future_gregorian().
 
 process_domain(Domain, Gregorian) ->
-    Expired = snitch_tempo:has_gregorian_passed(Gregorian),
-    scan_domain(Domain, Gregorian, Expired).
+    case snitch_tempo:has_gregorian_passed(Gregorian) of
+        true  -> query(Domain);
+        false -> Gregorian
+    end.
+
 
