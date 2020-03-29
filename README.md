@@ -15,3 +15,4 @@ TODO
 * Replace with mnesia?
 * Separate genserver for storage?
 * Separate genserver for query?
+* Return DNS status code response and save it
