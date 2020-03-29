@@ -113,8 +113,8 @@ handle_cast({delete, Domain}, State) ->
     snitch_store:delete(Domain),
     {noreply, State#state{domains_dict=NewDict}};
 handle_cast(reload, State) ->
-    NewState = snitch_file:load(),
-    {noreply, State#state{domains_dict=NewState}};
+    NewDict = snitch_file:load(),
+    {noreply, State#state{domains_dict=NewDict}};
 handle_cast(checkpoint, State) ->
     snitch_disk:save(),
     {noreply, State};
@@ -135,7 +135,7 @@ handle_cast(Request, State) ->
           {stop, Reason :: normal | term(), NewState :: term()}.
 
 handle_info(tick, State) ->
-    schedule(tick),
+    schedule(tick, ?DEFAULT_TICK),
     Dict = State#state.domains_dict,
     NewDict = dict:map(fun process_domain/2, Dict),
     {noreply, State#state{domains_dict=NewDict}};
@@ -194,9 +194,6 @@ format_status(_Opt, Status) ->
 
 schedule(Msg, Seconds) ->
     erlang:send_after(Seconds * 1000, erlang:self(), Msg).
-
-schedule(Msg) ->
-    schedule(Msg, ?DEFAULT_TICK).
 
 query(Domain) ->
     erlang:spawn(snitch_parser, query_all, [Domain]),

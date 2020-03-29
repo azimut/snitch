@@ -1,4 +1,5 @@
 -module(snitch_tempo).
+-include("db.hrl").
 -export(
    [
     get_future_gregorian/0,
@@ -7,7 +8,7 @@
 
 get_future_gregorian() ->
     Now = calendar:datetime_to_gregorian_seconds(calendar:local_time()),
-    Offset = rand:uniform(60 * 10 * 1),
+    Offset = rand:uniform(?RANGE_HOURS * 60 * 60),
     Now + Offset.
 
 has_gregorian_passed(Gregorian) ->
