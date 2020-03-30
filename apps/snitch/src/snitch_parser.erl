@@ -6,8 +6,8 @@
 %% API
 
 query_all(Domain) ->
-    CName = snitch_resolver:do_query(Domain, cname),
-    query_all(Domain, CName).
+    {S, R} = snitch_resolver:do_query(Domain, cname),
+    query_all(Domain, S, R).
 
 %% Internal functions
 
@@ -19,27 +19,30 @@ format_data(#dns_rr{type = ns}=X)    -> X#dns_rr.data;
 format_data(#dns_rr{type = cname}=X) -> X#dns_rr.data;
 format_data(#dns_rr{type = txt}=X)   -> lists:nth(1,X#dns_rr.data).
 
-answer_data([])               -> [];
-answer_data([#dns_rr{}=X|Xs]) ->
-    Data = [format_data(X)] ++ answer_data(Xs),
+answer_data(ok,#dns_rec{}=Record) -> answer_data(ok, Record#dns_rec.anlist);
+answer_data(error,Error)          -> [Error];
+answer_data(ok,[])                -> [];
+answer_data(ok,[#dns_rr{}=X|Xs])  ->
+    Data = [format_data(X)] ++ answer_data(ok,Xs),
     lists:sort(Data).
 
-query_and_store(Domain, cname) ->
-    IsCName = fun (R) -> R#dns_rr.type == cname end,
-    A = snitch_resolver:do_query(Domain, a),
-    CName = lists:filter(IsCName, A),
-    Data = answer_data(CName),
+query_and_store(Domain, cname) -> % get final A from CNAME chain
+    {Status, Record} = snitch_resolver:do_query(Domain, a),
+    Data = answer_data(Status,Record),
     snitch_store:store_and_alert(Domain, cname, Data);
 query_and_store(Domain, Type)  ->
-    Records = snitch_resolver:do_pure(Domain, Type),
-    Data = answer_data(Records),
+    {Status, Record} = snitch_resolver:do_pure(Domain, Type),
+    Data = answer_data(Status, Record),
     snitch_store:store_and_alert(Domain, Type, Data).
 
-query_all(Domain, []) ->
+query_all(Domain, ok, #dns_rec{anlist=[]}) ->
     query_and_store(Domain, mx),
     query_and_store(Domain, txt),
     query_and_store(Domain, aaaa),
     query_and_store(Domain, a),
     query_and_store(Domain, ns);
-query_all(Domain, _)  ->
-    query_and_store(Domain, cname).
+query_all(Domain, ok, #dns_rec{})  ->
+    query_and_store(Domain, cname);
+query_all(Domain, error, Error) ->
+    snitch_store:store_and_alert(Domain, cname, Error).
+

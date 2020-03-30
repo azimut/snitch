@@ -6,8 +6,21 @@
 -export(
    [
     do_query/2,
-    do_pure/2
+    do_pure/2,
+    get_dns_server/0
    ]).
+
+%% Api
+
+do_query(Domain, Type) ->
+    NSs = get_dns_server(),
+    inet_res:nnslookup(Domain, in, Type, NSs, ?DNS_TIMEOUT * 1000).
+
+do_pure(Domain, Type) ->
+    {Status, Record} = do_query(Domain, Type),
+    purify(Status, Record, Type).
+
+%% Internal functions
 
 get_dns_server() ->
     [{lists:nth(
@@ -15,12 +28,11 @@ get_dns_server() ->
         ?DNS_SERVERS),
       53}].
 
-do_query(Domain, Type) ->
-    NSs = get_dns_server(),
-    TimeOut = ?DNS_TIMEOUT * 1000,
-    {ok, R} = inet_res:nnslookup(Domain, in, Type, NSs, TimeOut),
-    R#dns_rec.anlist.
+purify(error, Error, _Type)         ->
+    {error, Error};
+purify(ok, #dns_rec{}=Record, Type) ->
+    Answers = Record#dns_rec.anlist,
+    NewAnswers = lists:filter(fun (R) -> R#dns_rr.type == Type end, Answers),
+    {ok, Record#dns_rec{anlist=NewAnswers}}.
 
-do_pure(Domain, Type) ->
-    Answers = do_query(Domain, Type),
-    lists:filter(fun (R) -> R#dns_rr.type == Type end, Answers).
+
