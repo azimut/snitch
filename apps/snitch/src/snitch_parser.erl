@@ -26,11 +26,11 @@ answer_data(ok,[#dns_rr{}=X|Xs])  ->
     Data = [format_data(X)] ++ answer_data(ok,Xs),
     lists:sort(Data).
 
-query_and_store(Domain, cname) -> % get final A from CNAME chain
+query_and_store(Domain, cname) -> % get full chain up to A
     {Status, Record} = snitch_resolver:do_query(Domain, a),
     Data = answer_data(Status,Record),
     snitch_store:store_and_alert(Domain, cname, Data);
-query_and_store(Domain, Type)  ->
+query_and_store(Domain, Type)  -> % get only record requested
     {Status, Record} = snitch_resolver:do_pure(Domain, Type),
     Data = answer_data(Status, Record),
     snitch_store:store_and_alert(Domain, Type, Data).
