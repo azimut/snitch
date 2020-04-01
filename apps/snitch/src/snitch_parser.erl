@@ -11,10 +11,10 @@ query_all(Domain) ->
 
 %% Internal functions
 
-%% TODO: soa
 get_data(#dns_rr{type = a}=X)     -> inet:ntoa(X#dns_rr.data);
 get_data(#dns_rr{type = aaaa}=X)  -> inet:ntoa(X#dns_rr.data);
 get_data(#dns_rr{type = mx}=X)    -> erlang:element(2, X#dns_rr.data);
+get_data(#dns_rr{type = soa}=X)   -> erlang:element(3, X#dns_rr.data);
 get_data(#dns_rr{type = ns}=X)    -> X#dns_rr.data;
 get_data(#dns_rr{type = cname}=X) -> X#dns_rr.data;
 get_data(#dns_rr{type = txt}=X)   -> lists:nth(1,X#dns_rr.data).
@@ -37,6 +37,7 @@ query_and_store(Domain, Type)  -> % get only record requested
 query_all(Domain, ok, #dns_rec{anlist=[]}) ->
     query_and_store(Domain, mx),
     query_and_store(Domain, txt),
+    %query_and_store(Domain, soa),
     query_and_store(Domain, aaaa),
     query_and_store(Domain, a),
     query_and_store(Domain, ns);
