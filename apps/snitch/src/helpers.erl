@@ -4,13 +4,14 @@
 
 %% Flatten nested list of strings
 %% https://stackoverflow.com/questions/2911420/erlang-flattening-a-list-of-strings
-slab([])    ->
-    [];
-slab([F|R]) ->
+slab([])                  -> [];
+slab([F|R])               ->
     case io_lib:char_list(F) of
         true -> [F|slab(R)];
         false -> slab(F) ++ slab(R)
-    end.
+    end;
+slab(F) when is_number(F) -> [F];
+slab(F) when is_atom(F)   -> [F].
 
 format_string(String) ->
     io:format("~s~n",[String]).
