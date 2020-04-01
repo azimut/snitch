@@ -1,5 +1,6 @@
 -module(helpers).
 -export([slab/1,format_string/1,format_list/2,is_subset/2]).
+-export([remove_duplicates/1]).
 
 
 %% Flatten nested list of strings
@@ -23,3 +24,5 @@ is_subset(ListA, ListB) ->
     SetA = sets:from_list(ListA),
     SetB = sets:from_list(ListB),
     sets:is_subset(SetA, SetB).
+
+remove_duplicates(L) -> ordsets:to_list(ordsets:from_list(L)).

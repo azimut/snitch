@@ -11,7 +11,6 @@ alert_on_difference(Domain, Type, Dns, Ets) ->
         false -> alert(Domain, Type, Dns, Ets)
     end.
 
-
 %% Internal functions
 
 notify(Title, Msg) ->

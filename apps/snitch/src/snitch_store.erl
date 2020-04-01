@@ -31,7 +31,7 @@ store_and_alert(Domain, Type, Dns) ->
 %% Private Functions
 
 lookup(Domain, Type) ->
-    lists:sort(
+    helpers:remove_duplicates(
       helpers:slab(
         ets:match(?TABLE_NAME, {Domain, Type, '$1', '_'}))).
 
