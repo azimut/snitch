@@ -10,5 +10,5 @@ add(Domain)    -> gen_server:cast(snitch_scheduler, {add, Domain}).
 all()          -> gen_server:call(snitch_scheduler, all).
 get(Domain)    ->
     Ret = gen_server:call(snitch_scheduler, {get, Domain}),
-    {Ret, calendar:gregorian_seconds_to_datetime(Ret)}.
+    {next, Ret, calendar:gregorian_seconds_to_datetime(Ret)}.
 
