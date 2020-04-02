@@ -19,9 +19,9 @@ init() ->
 delete(Domain) ->
     ets:delete(?TABLE_NAME, Domain).
 
-store(Domain, Type, Data) ->
+store(Domain, Type, Dns) ->
     Time = calendar:local_time(),
-    ets:insert(?TABLE_NAME, {Domain, Type, Data, Time}).
+    ets:insert(?TABLE_NAME, {Domain, Type, Dns, Time}).
 
 store_and_alert(Domain, Type, Dns) ->
     Ets = lookup(Domain, Type),
