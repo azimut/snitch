@@ -37,7 +37,7 @@ query_and_store(Domain, Type)  -> % get only record requested
 query_all(Domain, ok, #dns_rec{anlist=[]}) ->
     query_and_store(Domain, mx),
     query_and_store(Domain, txt),
-    %query_and_store(Domain, soa),
+    query_and_store(Domain, soa),
     query_and_store(Domain, aaaa),
     query_and_store(Domain, a),
     query_and_store(Domain, ns);
