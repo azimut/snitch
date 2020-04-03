@@ -5,6 +5,13 @@
 
 alert_on_difference(_,_,_Dns=[_|_],_Ets=[]) -> ok; % First time
 alert_on_difference(_,_,Idem,Idem)          -> ok;
+alert_on_difference(Domain, cname, RawDns, RawEts) -> % Remove ips on cname alert
+    Dns = lists:filter(fun helpers:is_not_ip/1, RawDns),
+    Ets = lists:filter(fun helpers:is_not_ip/1, RawEts),
+    case helpers:is_subset(Dns, Ets) of
+        true  -> ok;
+        false -> alert(Domain, cname, Dns, Ets)
+    end;
 alert_on_difference(Domain, Type, Dns, Ets) ->
     case helpers:is_subset(Dns, Ets) of
         true  -> ok;
@@ -17,13 +24,13 @@ notify(Title, Msg) ->
     S = io_lib:format("/usr/bin/notify-send --urgency critical '~s' '~s'", [Title, Msg]),
     os:cmd(S).
 
-alert_change(Domain, Type, Old, New) ->
+alert_change(Domain, Type, Dns, Ets) ->
     io:format("CHANGE! data for domain ~s~n", [Domain]),
     Msg = io_lib:format("type (~s) changed", [Type]),
     helpers:format_string(Msg),
     notify(Domain, Msg),
-    helpers:format_list("OLD ~s~n", Old),
-    helpers:format_list("NEW ~s~n", New).
+    helpers:format_list("OLD ~s~n", Ets),
+    helpers:format_list("NEW ~s~n", Dns).
 
 alert_new(Domain, Type, H) ->
     io:format("NEW! data for domain ~s~n", [Domain]),
@@ -31,9 +38,11 @@ alert_new(Domain, Type, H) ->
     helpers:format_string(Msg),
     notify(Domain, Msg).
 
-alert(_,_,_,_,hot)                 -> ok;
-alert(Domain, Type, New=[H|_],_,cold)
-  when length(New) =:= 1 ->
+alert(_,_,_,_,hot)                  -> ok;
+alert(_,a,_,_,_)                    -> ok;
+alert(_,aaaa,_,_,_)                 -> ok;
+alert(Domain, Type, Dns=[H|_],_,cold)
+  when length(Dns) =:= 1 ->
     alert_new(Domain, Type, H);
 alert(Domain, Type, Dns, Ets, cold) -> alert_change(Domain, Type, Dns, Ets).
 
