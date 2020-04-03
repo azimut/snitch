@@ -3,8 +3,8 @@
 
 %% API
 
-alert_on_difference(_,_,_Dns=[_|_],_Ets=[]) -> ok; % First time
-alert_on_difference(_,_,Idem,Idem)          -> ok;
+alert_on_difference(_,_,_Dns=[_|_],_Ets=[])        -> ok; % First time
+alert_on_difference(_,_,Idem,Idem)                 -> ok;
 alert_on_difference(Domain, cname, RawDns, RawEts) -> % Remove ips on cname alert
     Dns = lists:filter(fun helpers:is_not_ip/1, RawDns),
     Ets = lists:filter(fun helpers:is_not_ip/1, RawEts),
@@ -12,7 +12,7 @@ alert_on_difference(Domain, cname, RawDns, RawEts) -> % Remove ips on cname aler
         true  -> ok;
         false -> alert(Domain, cname, Dns, Ets)
     end;
-alert_on_difference(Domain, Type, Dns, Ets) ->
+alert_on_difference(Domain, Type, Dns, Ets)        ->
     case helpers:is_subset(Dns, Ets) of
         true  -> ok;
         false -> alert(Domain, Type, Dns, Ets)

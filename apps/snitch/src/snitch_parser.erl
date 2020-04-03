@@ -28,12 +28,12 @@ answers(error, Error)          -> [erlang:atom_to_list(Error)].
 
 query_and_store(Domain, cname) -> % get full chain up to A
     {Status, Record} = snitch_resolver:do_query(Domain, a),
-    Data = answers(Status,Record),
-    snitch_store:store_and_alert(Domain, cname, Data);
+    Dns = answers(Status,Record),
+    snitch_store:store_and_alert(Domain, cname, Dns);
 query_and_store(Domain, Type)  -> % get only record requested
     {Status, Record} = snitch_resolver:do_pure(Domain, Type),
-    Data = answers(Status, Record),
-    snitch_store:store_and_alert(Domain, Type, Data).
+    Dns = answers(Status, Record),
+    snitch_store:store_and_alert(Domain, Type, Dns).
 
 query_all(Domain, ok, #dns_rec{anlist=[]}) ->
     query_and_store(Domain, mx),
