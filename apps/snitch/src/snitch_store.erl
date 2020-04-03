@@ -42,7 +42,7 @@ lookup_datetime(Domain, Type) ->
           ets:match(?TABLE_NAME, {Domain, Type,'_','$1'})))).
 
 store_on_difference(_,_,_Dns=[],_)          -> ok;
-store_on_difference(_,_,_Dns=[timeout],_)   -> ok; % do not store timeouts
+store_on_difference(_,_,_Dns=["timeout"],_) -> ok; % do not store timeouts
 store_on_difference(_,_,Idem,Idem)          -> ok;
 store_on_difference(Domain, Type, Dns, Ets) ->
     case helpers:is_subset(Dns, Ets) of

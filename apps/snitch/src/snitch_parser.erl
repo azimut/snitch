@@ -14,7 +14,8 @@ query_all(Domain) ->
 get_data(#dns_rr{type = a}=X)     -> inet:ntoa(X#dns_rr.data);
 get_data(#dns_rr{type = aaaa}=X)  -> inet:ntoa(X#dns_rr.data);
 get_data(#dns_rr{type = mx}=X)    -> erlang:element(2, X#dns_rr.data);
-get_data(#dns_rr{type = soa}=X)   -> erlang:element(3, X#dns_rr.data);
+get_data(#dns_rr{type = soa}=X)   -> erlang:integer_to_list(
+                                       erlang:element(3, X#dns_rr.data));
 get_data(#dns_rr{type = ns}=X)    -> X#dns_rr.data;
 get_data(#dns_rr{type = cname}=X) -> X#dns_rr.data;
 get_data(#dns_rr{type = txt}=X)   -> lists:nth(1,X#dns_rr.data).
@@ -23,7 +24,7 @@ get_answers([])               -> [];
 get_answers([#dns_rr{}=X|Xs]) -> [get_data(X)] ++ get_answers(Xs).
 
 answers(ok, #dns_rec{}=Record) -> lists:sort(get_answers(Record#dns_rec.anlist));
-answers(error, Error)          -> [Error].
+answers(error, Error)          -> [erlang:atom_to_list(Error)].
 
 query_and_store(Domain, cname) -> % get full chain up to A
     {Status, Record} = snitch_resolver:do_query(Domain, a),
