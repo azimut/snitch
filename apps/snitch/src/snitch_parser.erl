@@ -42,8 +42,8 @@ query_all(Domain, ok, #dns_rec{anlist=[]}) ->
     query_and_store(Domain, aaaa),
     query_and_store(Domain, a),
     query_and_store(Domain, ns);
-query_all(Domain, ok, #dns_rec{})  ->
+query_all(Domain, ok, #dns_rec{})          ->
     query_and_store(Domain, cname);
-query_all(Domain, error, Error) ->
-    snitch_store:store_and_alert(Domain, cname, Error).
+query_all(Domain, error, Error)            ->
+    snitch_store:store_and_alert(Domain, cname, [erlang:atom_to_list(Error)]).
 
