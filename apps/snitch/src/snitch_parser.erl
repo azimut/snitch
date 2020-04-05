@@ -24,7 +24,7 @@ get_answers([])               -> [];
 get_answers([#dns_rr{}=X|Xs]) -> [get_data(X)] ++ get_answers(Xs).
 
 answers(ok, #dns_rec{}=Record) -> lists:sort(get_answers(Record#dns_rec.anlist));
-answers(error, Error)          -> [erlang:atom_to_list(Error)].
+answers(error, Error)          -> [Error].
 
 query_and_store(Domain, cname) -> % get full chain up to A
     {Status, Record} = snitch_resolver:do_query(Domain, a),
@@ -45,5 +45,5 @@ query_all(Domain, ok, #dns_rec{anlist=[]}) ->
 query_all(Domain, ok, #dns_rec{})          ->
     query_and_store(Domain, cname);
 query_all(Domain, error, Error)            ->
-    snitch_store:store_and_alert(Domain, cname, [erlang:atom_to_list(Error)]).
+    snitch_store:store_and_alert(Domain, cname, [Error]).
 

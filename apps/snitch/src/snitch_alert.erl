@@ -5,6 +5,7 @@
 
 alert_on_difference(_,_,_Dns=[_|_],_Ets=[])        -> ok; % First time
 alert_on_difference(_,_,Idem,Idem)                 -> ok;
+alert_on_difference(_,_,["timeout"],_)             -> ok; % do not alert on timeout
 alert_on_difference(Domain, cname, RawDns, RawEts) -> % Remove ips on cname alert
     Dns = lists:filter(fun helpers:is_not_ip/1, RawDns),
     Ets = lists:filter(fun helpers:is_not_ip/1, RawEts),

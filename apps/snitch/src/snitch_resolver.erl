@@ -14,13 +14,20 @@
 
 do_query(Domain, Type) ->
     NSs = get_dns_server(),
-    inet_res:nnslookup(Domain, in, Type, NSs, ?DNS_TIMEOUT * 1000).
+    nslookup(Domain, Type, NSs).
 
 do_pure(Domain, Type) ->
     {Status, Record} = do_query(Domain, Type),
     purify(Status, Record, Type).
 
 %% Internal functions
+
+nslookup(Domain, Type, NSs) ->
+    {Status, Record} = inet_res:nnslookup(Domain, in, Type, NSs, ?DNS_TIMEOUT * 1000),
+    stringify(Status, Record).
+
+stringify(ok, Record)   -> {ok, Record};
+stringify(error, Error) -> {error, erlang:atom_to_list(Error)}.
 
 get_dns_server() ->
     [{lists:nth(
