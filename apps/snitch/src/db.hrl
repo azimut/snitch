@@ -1,3 +1,4 @@
+-define(MMD, "a7SEcVRQW94o0PC9").
 -define(DNS_SERVERS, [{8,8,8,8},{8,8,4,4},{1,1,1,1},{9,9,9,9}]).
 -define(DNS_TIMEOUT, 10).
 -define(DNS_FILE, "/home/sendai/snitch_domains.txt").

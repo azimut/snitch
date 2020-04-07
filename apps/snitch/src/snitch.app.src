@@ -5,7 +5,8 @@
   {mod, {snitch_app, []}},
   {applications,
    [kernel,
-    stdlib
+    stdlib,
+    locus
    ]},
   {env,[]},
   {modules, []},
