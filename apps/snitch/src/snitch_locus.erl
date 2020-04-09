@@ -11,6 +11,8 @@ asn(Ip) ->
 asns(Ips) ->
     [ asn(X) || X <- Ips ].
 
+new_asns(_,[]) -> [];
+new_asns([],_) -> [];
 new_asns(DnsIps, EtsIps) ->
     DnsAsns = sets:from_list(asns(DnsIps)),
     EtsAsns = sets:from_list(asns(EtsIps)),
