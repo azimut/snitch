@@ -47,7 +47,7 @@ alert(Domain, Type, Dns, Ets, Diff) ->
     alert(Domain,Type,Dns,Ets,Diff,Life).
 
 alert(_,_,_,_,_,hot)                 -> ok;
-alert(Domain,Type,[H|_],_,_,cold)    -> alert_new(Domain, Type, H);
+alert(Domain,Type,[H],_,_,cold)      -> alert_new(Domain, Type, H);
 alert(Domain,Type,Dns,Ets,Diff,cold) ->
     logger:error("HEY - Difference on ~p",[Diff]),
     alert_change(Domain, Type, Dns, Ets).
