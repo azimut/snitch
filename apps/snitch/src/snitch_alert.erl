@@ -6,6 +6,7 @@
 alert_on_difference(_,_,_Dns=[_|_],_Ets=[])        -> ok; % first time
 alert_on_difference(_,_,Idem,Idem)                 -> ok; % equal
 alert_on_difference(_,_,["timeout"],_)             -> ok; % do not alert on timeout
+alert_on_difference(_,soa,_,_)                     -> ok;
 alert_on_difference(Domain,a,Dns,Ets)              ->
     Diff = snitch_locus:new_asns(Dns,Ets),
     alert(Domain, a, Dns, Ets, Diff);
