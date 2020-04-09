@@ -1,7 +1,7 @@
 -module(helpers).
 -export([slab/1,format_string/1,format_list/2,is_subset/2,subtract/2]).
 -export([remove_duplicates/1]).
--export([is_not_ip/1]).
+-export([is_ip/1,is_not_ip/1]).
 
 %% Flatten nested list of strings
 %% https://stackoverflow.com/questions/2911420/erlang-flattening-a-list-of-strings
@@ -33,8 +33,10 @@ subtract(ListA, ListB) ->
 
 remove_duplicates(L) -> ordsets:to_list(ordsets:from_list(L)).
 
-is_not_ip(String) ->
-    case re:run(String , "[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+") of
-        {match, _} -> false;
-        nomatch    -> true
+is_ip(S) ->
+    case re:run(S, "[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+") of
+        {match, _} -> true;
+        nomatch    -> false
     end.
+
+is_not_ip(S) -> not is_ip(S).

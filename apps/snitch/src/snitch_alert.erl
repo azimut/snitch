@@ -3,8 +3,8 @@
 
 %% API
 
-alert_on_difference(_,_,_Dns=[_|_],_Ets=[])        -> ok; % First time
-alert_on_difference(_,_,Idem,Idem)                 -> ok;
+alert_on_difference(_,_,_Dns=[_|_],_Ets=[])        -> ok; % first time
+alert_on_difference(_,_,Idem,Idem)                 -> ok; % equal
 alert_on_difference(_,_,["timeout"],_)             -> ok; % do not alert on timeout
 alert_on_difference(Domain,a,Dns,Ets)              ->
     Diff = snitch_locus:new_asns(Dns,Ets),
@@ -13,9 +13,9 @@ alert_on_difference(Domain,aaaa,Dns,Ets)           ->
     Diff = snitch_locus:new_asns(Dns,Ets),
     alert(Domain, a, Dns, Ets, Diff);
 alert_on_difference(Domain, cname, RawDns, RawEts) ->     % Remove ips on cname alert
-    Dns = lists:filter(fun helpers:is_not_ip/1, RawDns),
-    Ets = lists:filter(fun helpers:is_not_ip/1, RawEts),
-    Diff = helpers:subtract(Dns,Ets),
+    Dns = lists:filter(fun helpers:is_ip/1, RawDns),
+    Ets = lists:filter(fun helpers:is_ip/1, RawEts),
+    Diff = snitch_locus:new_asns(Dns,Ets),
     alert(Domain, cname, Dns, Ets, Diff);
 alert_on_difference(Domain, Type, Dns, Ets)        ->
     Diff = helpers:subtract(Dns,Ets),
