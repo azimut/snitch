@@ -12,7 +12,7 @@ alert_on_difference(Domain,a,Dns,Ets)              ->
 alert_on_difference(Domain,aaaa,Dns,Ets)           ->
     Diff = snitch_locus:new_asns(Dns,Ets),
     alert(Domain, a, Dns, Ets, Diff);
-alert_on_difference(Domain, cname, RawDns, RawEts) ->     % Remove ips on cname alert
+alert_on_difference(Domain, cname, RawDns, RawEts) ->     % check ips only
     Dns = lists:filter(fun helpers:is_ip/1, RawDns),
     Ets = lists:filter(fun helpers:is_ip/1, RawEts),
     Diff = snitch_locus:new_asns(Dns,Ets),
@@ -46,9 +46,8 @@ alert(Domain, Type, Dns, Ets, Diff) ->
     Life = snitch_tempo:datetime_older_than_seconds(DateTime,2*24*60*60),
     alert(Domain,Type,Dns,Ets,Diff,Life).
 
-alert(_,_,_,_,_,hot)              -> ok;
-alert(Domain,Type,Dns=[H|_],_,_,cold)
-  when erlang:length(Dns) =:= 1   -> alert_new(Domain, Type, H);
+alert(_,_,_,_,_,hot)                 -> ok;
+alert(Domain,Type,[H|_],_,_,cold)    -> alert_new(Domain, Type, H);
 alert(Domain,Type,Dns,Ets,Diff,cold) ->
     logger:error("HEY - Difference on ~p",[Diff]),
     alert_change(Domain, Type, Dns, Ets).
