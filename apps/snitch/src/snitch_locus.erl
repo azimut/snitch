@@ -3,13 +3,9 @@
 -export([asn/1, asns/1]).
 -export([new_asns/2]).
 
-asn(Ip) ->
-    {ok, Record} = locus:lookup(asn, Ip),
-    maps:get(<<"autonomous_system_organization">>,
-             Record).
-
 asns(Ips) ->
-    [ asn(X) || X <- Ips ].
+    Query = [ asn(Ip) || Ip <- Ips ],
+    [ Record || {Status, Record} <- Query, Status == ok].
 
 new_asns(_,[]) -> [];
 new_asns([],_) -> [];
@@ -18,3 +14,15 @@ new_asns(DnsIps, EtsIps) ->
     EtsAsns = sets:from_list(asns(EtsIps)),
     sets:to_list(
       sets:subtract(DnsAsns,EtsAsns)).
+
+%% Private functions
+
+asn(Ip) ->
+    {Status, Record} = locus:lookup(asn, Ip),
+    process(Status, Record, Ip).
+
+process(ok,    Record, _Ip) ->
+    {ok, maps:get(<<"autonomous_system_organization">>, Record)};
+process(error, Record, Ip) ->
+    logger:error("Cannot resolve ~s due ~s",[Ip, Record]),
+    {error, Record}.
