@@ -35,12 +35,10 @@ remove_duplicates(L) ->
     sets:to_list(
       sets:from_list(L)).
 
-is_ip({_,_,_,_}=Ip) ->
-    inet_cidr:is_ipv4(Ip) or inet_cidr:is_ipv6(Ip);
-is_ip(Ip)           ->
-    {State, Inet} = inet:parse_address(Ip),
+is_ip(Ip) ->
+    {State, _} = inet:parse_address(Ip),
     case State of
-        ok -> is_ip(Inet);
+        ok -> true;
         _  -> false
     end.
 
