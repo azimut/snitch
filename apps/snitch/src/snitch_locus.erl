@@ -3,10 +3,6 @@
 -export([asn/1, asns/1]).
 -export([new_asns/2]).
 
-asns(Ips) ->
-    Query = [ asn(Ip) || Ip <- Ips ],
-    [ Record || {Status, Record} <- Query, Status == ok].
-
 new_asns(_,[]) -> [];
 new_asns([],_) -> [];
 new_asns(DnsIps, EtsIps) ->
@@ -20,6 +16,10 @@ new_asns(DnsIps, EtsIps) ->
 asn(Ip) ->
     {Status, Record} = locus:lookup(asn, Ip),
     process(Status, Record, Ip).
+
+asns(Ips) ->
+    Query = [ asn(Ip) || Ip <- Ips ],
+    [ Record || {Status, Record} <- Query, Status == ok].
 
 process(ok,    Record, _Ip) ->
     {ok, maps:get(<<"autonomous_system_organization">>, Record)};

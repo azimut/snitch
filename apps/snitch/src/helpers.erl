@@ -32,9 +32,10 @@ subtract(ListA, ListB) ->
       sets:subtract(SetA, SetB)).
 
 remove_duplicates(L) ->
-    sets:to_list(sets:from_list(L)).
+    sets:to_list(
+      sets:from_list(L)).
 
-%% FIXME: ipv6 regex
+%% FIXME: add ipv6 regex
 is_ip(S) ->
     case re:run(S, "[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+") of
         {match, [{0,_}]} -> true;
