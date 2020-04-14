@@ -33,10 +33,11 @@ subtract(ListA, ListB) ->
 
 remove_duplicates(L) -> ordsets:to_list(ordsets:from_list(L)).
 
+%% FIXME: ipv6 regex
 is_ip(S) ->
-    case re:run(S, "[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+") of
-        {match, _} -> true;
-        nomatch    -> false
+    case re:run(S, "[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+") of
+        {match, [{0,_}]} -> true;
+        nomatch          -> false
     end.
 
 is_not_ip(S) -> not is_ip(S).

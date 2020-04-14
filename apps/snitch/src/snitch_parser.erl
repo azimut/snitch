@@ -35,6 +35,7 @@ query_and_store(Domain, Type)  -> % get only record requested
     Dns = answers(Status, Record),
     snitch_store:store_and_alert(Domain, Type, Dns).
 
+%% NOTE: some dns servers return all CNAME's others just one.
 query_all(Domain, ok, #dns_rec{anlist=[]}) ->
     query_and_store(Domain, mx),
     query_and_store(Domain, txt),
