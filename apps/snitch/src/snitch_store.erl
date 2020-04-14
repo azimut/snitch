@@ -24,9 +24,10 @@ store_and_alert(Domain, Type, Dns) ->
     store_on_difference(Domain, Type, Dns, Ets).
 
 lookup(Domain, Type) ->
-    helpers:remove_duplicates(
-      helpers:slab(
-        ets:match(?TABLE_NAME, {Domain, Type, '$1', '_'}))).
+    lists:sort(
+      helpers:remove_duplicates(
+        helpers:slab(
+          ets:match(?TABLE_NAME, {Domain, Type, '$1', '_'})))).
 
 lookup_datetime(Domain, Type) ->
     erlang:hd(

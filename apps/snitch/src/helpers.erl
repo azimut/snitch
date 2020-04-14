@@ -31,7 +31,8 @@ subtract(ListA, ListB) ->
     sets:to_list(
       sets:subtract(SetA, SetB)).
 
-remove_duplicates(L) -> ordsets:to_list(ordsets:from_list(L)).
+remove_duplicates(L) ->
+    sets:to_list(sets:from_list(L)).
 
 %% FIXME: ipv6 regex
 is_ip(S) ->
