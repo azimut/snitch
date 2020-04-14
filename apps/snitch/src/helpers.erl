@@ -35,11 +35,13 @@ remove_duplicates(L) ->
     sets:to_list(
       sets:from_list(L)).
 
-%% FIXME: add ipv6 regex
-is_ip(S) ->
-    case re:run(S, "[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+") of
-        {match, [{0,_}]} -> true;
-        nomatch          -> false
+is_ip({_,_,_,_}=Ip) ->
+    inet_cidr:is_ipv4(Ip) or inet_cidr:is_ipv6(Ip);
+is_ip(Ip)           ->
+    {State, Inet} = inet:parse_address(Ip),
+    case State of
+        ok -> is_ip(Inet);
+        _  -> false
     end.
 
 is_not_ip(S) -> not is_ip(S).
