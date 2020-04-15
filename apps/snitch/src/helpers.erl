@@ -17,7 +17,7 @@ slab(F) when is_atom(F)   -> [F].
 format_string(String) ->
     io:format("~s~n",[String]).
 
-format_list(Format, List) -> 
+format_list(Format, List) ->
     lists:foreach(fun (S) -> io:format(Format, [S]) end, List).
 
 is_subset(ListA, ListB) ->

@@ -10,7 +10,7 @@ load() ->
     ets:from_dets(?TABLE_NAME, Dets),
     dets:close(Dets).
 
-save() -> 
+save() ->
     {ok, Dets} = dets:open_file(?TABLE_NAME, [{type,bag}]),
     ets:to_dets(?TABLE_NAME, Dets),
     dets:close(Dets).
