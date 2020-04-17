@@ -1,7 +1,8 @@
 -module(helpers).
+-include("db.hrl").
 -export([slab/1,format_string/1,format_list/2,is_subset/2,subtract/2]).
 -export([remove_duplicates/1]).
--export([is_ip/1,is_not_ip/1]).
+-export([is_ip/1]).
 
 %% Flatten nested list of strings
 %% https://stackoverflow.com/questions/2911420/erlang-flattening-a-list-of-strings
@@ -35,11 +36,16 @@ remove_duplicates(L) ->
     sets:to_list(
       sets:from_list(L)).
 
+is_reserved({_,_,_,_,_,_,_,_}) -> false;
+is_reserved({_,_,_,_}=Ip)      ->
+    lists:any(fun (Net) -> inet_cidr:contains(Net, Ip) end,
+              ?RESERVED_NETS).
+
+is_public(Ip) -> not is_reserved(Ip).
+
 is_ip(Ip) ->
-    {State, _} = inet:parse_address(Ip),
+    {State, ParsedIp} = inet:parse_address(Ip),
     case State of
-        ok -> true;
+        ok -> is_public(ParsedIp);
         _  -> false
     end.
-
-is_not_ip(S) -> not is_ip(S).

@@ -41,5 +41,3 @@ purify(ok, #dns_rec{}=Record, Type) ->
     Answers = Record#dns_rec.anlist,
     NewAnswers = lists:filter(fun (R) -> R#dns_rr.type == Type end, Answers),
     {ok, Record#dns_rec{anlist=NewAnswers}}.
-
-

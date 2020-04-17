@@ -1,6 +1,5 @@
 -module(snitch_locus).
 -include("db.hrl").
--export([asn/1, asns/1]).
 -export([new_asns/2]).
 
 new_asns(_,[]) -> [];
