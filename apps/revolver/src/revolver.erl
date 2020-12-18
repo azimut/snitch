@@ -8,8 +8,8 @@
 lookup(Domain, Type) ->
     NSs = rand_dns_server(),
     Timeout = dns_timeout() * 1000,
-    {ok, Record} = inet_res:nnslookup(Domain, in, Type, NSs, Timeout),
-    answers(Record).
+    {Status, Record} = inet_res:nnslookup(Domain, in, Type, NSs, Timeout),
+    answers(Status, Record).
 
 %% Internal Functions
 
@@ -34,7 +34,8 @@ dns_timeout() ->
         _ -> 10
     end.
 
-answers(#dns_rec{anlist=Answers}) -> get_data(Answers).
+answers(error,Error)                 -> Error;
+answers(ok,#dns_rec{anlist=Answers}) -> get_data(Answers).
 
 get_data([])                      -> [];
 get_data([#dns_rr{}=X|Xs])        -> [get_data(X)] ++ get_data(Xs);
