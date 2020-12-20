@@ -1,15 +1,18 @@
 -module(revolver).
 -include_lib("kernel/src/inet_dns.hrl").
 
--export([lookup/2]).
+-export([lookup/2,lookup/3]).
 
 %% Api
 
-lookup(Domain, Type) ->
-    NSs = rand_dns_server(),
+lookup(Domain, Type, NSs) ->
     Timeout = dns_timeout() * 1000,
     {Status, Record} = inet_res:nnslookup(Domain, in, Type, NSs, Timeout),
-    answers(Status, Record).
+    answers({Status, Record}).
+
+lookup(Domain, Type) ->
+    NSs = rand_dns_server(),
+    lookup(Domain, Type, NSs).
 
 %% Internal Functions
 
@@ -34,8 +37,8 @@ dns_timeout() ->
         _ -> 10
     end.
 
-answers(error,Error)                 -> Error;
-answers(ok,#dns_rec{anlist=Answers}) -> get_data(Answers).
+answers({error,Error})                 -> {error, Error};
+answers({ok,#dns_rec{anlist=Answers}}) -> {ok,get_data(Answers)}.
 
 get_data([])                      -> [];
 get_data([#dns_rr{}=X|Xs])        -> [get_data(X)] ++ get_data(Xs);
