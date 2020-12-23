@@ -98,7 +98,6 @@ handle_cast({delete, RawDomain}, State) ->
 handle_cast(_Request, State) ->
     {noreply, State}.
 
-
 %%--------------------------------------------------------------------
 %% @private
 %% @doc
@@ -115,6 +114,9 @@ handle_info(tick, State) ->
     Old = State#state.domains,
     New = dict:map(fun tick_domain/2, Old),
     {noreply, #state{domains=New}};
+handle_info({State, Domain, Type, Data}, State) -> % lookup reply
+    banker_vault:store(State, Domain, Type, Data),
+    {noreply, State};
 handle_info(_Info, State) ->
     {noreply, State}.
 
@@ -176,8 +178,9 @@ schedule(Msg, Seconds) ->
 
 tick_domain(Domain, Gregorian) ->
     tick_domain(Domain, Gregorian, now_gregorian_seconds()).
-tick_domain(_Domain, Gregorian, Now)
+tick_domain(Domain, Gregorian, Now)
   when Now > Gregorian ->
+    sheriff_holster:async_lookup(erlang:self(), Domain),
     next_gregorian_seconds();
 tick_domain(_, Gregorian, Now)
   when Now < Gregorian ->
