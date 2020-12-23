@@ -1,5 +1,5 @@
 {application, banker,
- [{description, "An OTP application"},
+ [{description, "Stores DNS query results into SQL"},
   {vsn, "0.1.0"},
   {registered, []},
   {mod, {banker_app, []}},

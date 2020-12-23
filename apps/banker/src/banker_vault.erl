@@ -55,8 +55,8 @@ start_link() ->
           ignore.
 init([]) ->
     process_flag(trap_exit, true),
-    banker_ets:init(),
-    banker_ets:load(),
+    %% banker_ets:init(),
+    %% banker_ets:load(),
     schedule(checkpoint, ?CHECKPOINT_SECONDS),
     {ok, #state{}}.
 
@@ -106,7 +106,7 @@ handle_cast(_Request, State) ->
           {stop, Reason :: normal | term(), NewState :: term()}.
 handle_info(checkpoint, State) ->
     schedule(checkpoint, ?CHECKPOINT_SECONDS),
-    bank_ets:save(),
+    %% bank_ets:save(),
     {noreply, State};
 handle_info(_Info, State) ->
     {noreply, State}.

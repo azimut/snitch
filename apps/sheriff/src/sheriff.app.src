@@ -1,5 +1,5 @@
 {application, sheriff,
- [{description, "genapp wrapper around dns revolver resolver"},
+ [{description, "Spawns revolver DNS requests"},
   {vsn, "0.1.0"},
   {registered, []},
   {mod, {sheriff_app, []}},

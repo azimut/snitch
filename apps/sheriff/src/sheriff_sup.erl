@@ -21,7 +21,7 @@ init([]) ->
                  restart   => permanent,
                  shutdown  => 2000,
                  type      => worker,
-                 modules   => gen_server},
+                 modules   => [sheriff_holster]},
     {ok, {SupFlags, [ChildSpc]}}.
 
 %% internal functions

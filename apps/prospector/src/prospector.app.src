@@ -1,5 +1,5 @@
 {application, prospector,
- [{description, "An OTP application"},
+ [{description, "Schedules DNS requests"},
   {vsn, "0.1.0"},
   {registered, []},
   {mod, {prospector_app, []}},
