@@ -17,7 +17,7 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3, format_status/2]).
 
--define(CHECKPOINT_SECONDS, 600).
+-define(CHECKPOINT_SECONDS, 5 * 60).
 -define(SERVER, ?MODULE).
 
 -record(state, {}).
@@ -55,8 +55,8 @@ start_link() ->
           ignore.
 init([]) ->
     process_flag(trap_exit, true),
-    %% banker_ets:init(),
-    %% banker_ets:load(),
+    banker_ets:init(),
+    banker_ets:load(),
     schedule(checkpoint, ?CHECKPOINT_SECONDS),
     {ok, #state{}}.
 
@@ -90,6 +90,9 @@ handle_call(_Request, _From, State) ->
           {noreply, NewState :: term(), Timeout :: timeout()} |
           {noreply, NewState :: term(), hibernate} |
           {stop, Reason :: term(), NewState :: term()}.
+handle_cast({store, Domain, Type, Data}, State) ->
+    banker_ets:insert(Domain, Type, Data),
+    {noreply, State};
 handle_cast(_Request, State) ->
     {noreply, State}.
 
@@ -106,7 +109,7 @@ handle_cast(_Request, State) ->
           {stop, Reason :: normal | term(), NewState :: term()}.
 handle_info(checkpoint, State) ->
     schedule(checkpoint, ?CHECKPOINT_SECONDS),
-    %% bank_ets:save(),
+    banker_ets:save(),
     {noreply, State};
 handle_info(_Info, State) ->
     {noreply, State}.
