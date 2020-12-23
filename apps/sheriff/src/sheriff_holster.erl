@@ -8,7 +8,8 @@
 %%%-------------------------------------------------------------------
 -module(sheriff_holster).
 -behaviour(gen_server).
--export([start_link/0,lookup/2]).
+-export([start_link/0]).
+-export([async_lookup/2,async_lookup/3,sync_lookup/2]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3, format_status/2]).
 -define(SERVER, ?MODULE).
@@ -18,8 +19,6 @@
 %%% API
 %%%===================================================================
 
-lookup(Domain, Type) ->
-    gen_server:call(?MODULE,{lookup, Domain, Type}).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -29,7 +28,7 @@ lookup(Domain, Type) ->
 -spec start_link() -> {ok, Pid :: pid()} |
           {error, Error :: {already_started, pid()}} |
           {error, Error :: term()} |
-ignore.
+          ignore.
 start_link() ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
@@ -67,12 +66,15 @@ init([]) ->
           {noreply, NewState :: term(), hibernate} |
           {stop, Reason :: term(), Reply :: term(), NewState :: term()} |
           {stop, Reason :: term(), NewState :: term()}.
-handle_call({lookup, Domain, Type},_From,State) ->
+handle_call({lookup, Domain, Type}, _From, State) ->
     Reply = revolver:lookup(Domain, Type),
     {reply, Reply, State};
 handle_call(_Request, _From, State) ->
     Reply = ok,
     {reply, Reply, State}.
+
+sync_lookup(Domain, Type) ->
+    gen_server:call({local, ?MODULE}, {lookup, Domain, Type}).
 
 %%--------------------------------------------------------------------
 %% @private
@@ -83,13 +85,21 @@ handle_call(_Request, _From, State) ->
 -spec handle_cast(Request :: term(), State :: term()) ->
           {noreply, NewState :: term()} |
           {noreply, NewState :: term(), Timeout :: timeout()} |
-          {noreply, NewState :: term(), hibernate} |
-          {stop, Reason :: term(), NewState :: term()}.
-handle_cast({lookup, From, Domain, Type}, State) ->
-    From ! revolver:lookup(Domain, Type),
+                                  {noreply, NewState :: term(), hibernate} |
+                                  {stop, Reason :: term(), NewState :: term()}.
+handle_cast({lookup, From, Domain}, State)       ->
+    erlang:spawn(pony, express, [From, Domain]),
     {noreply, State};
-handle_cast(_Request, State) ->
+handle_cast({lookup, From, Domain, Type}, State) ->
+    erlang:spawn(pony, express, [From, Domain, Type]),
+    {noreply, State};
+handle_cast(_Request, State)                     ->
     {noreply, State}.
+
+async_lookup(From, Domain)       ->
+    gen_server:cast({local, ?SERVER}, {lookup, From, Domain}).
+async_lookup(From, Domain, Type) ->
+    gen_server:cast({local, ?SERVER}, {lookup, From, Domain, Type}).
 
 %%--------------------------------------------------------------------
 %% @private
