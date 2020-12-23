@@ -1,4 +1,4 @@
--module(pony).
+-module(sheriff_pony).
 -export([gishgallop/4,express/2,express/3]).
 
 express(From, Domain)       ->

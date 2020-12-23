@@ -88,10 +88,10 @@ sync_lookup(Domain, Type) ->
                                   {noreply, NewState :: term(), hibernate} |
                                   {stop, Reason :: term(), NewState :: term()}.
 handle_cast({lookup, From, Domain}, State)       ->
-    erlang:spawn(pony, express, [From, Domain]),
+    erlang:spawn(sheriff_pony, express, [From, Domain]),
     {noreply, State};
 handle_cast({lookup, From, Domain, Type}, State) ->
-    erlang:spawn(pony, express, [From, Domain, Type]),
+    erlang:spawn(sheriff_pony, express, [From, Domain, Type]),
     {noreply, State};
 handle_cast(_Request, State)                     ->
     {noreply, State}.
