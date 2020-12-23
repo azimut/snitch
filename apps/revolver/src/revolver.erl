@@ -5,14 +5,12 @@
 
 %% Api
 
+lookup(Domain, Type) ->
+    lookup(Domain, Type, rand_dns_server()).
 lookup(Domain, Type, NSs) ->
     Timeout = dns_timeout() * 1000,
     {Status, Record} = inet_res:nnslookup(Domain, in, Type, NSs, Timeout),
     answers(Status, Domain, Type, Record).
-
-lookup(Domain, Type) ->
-    NSs = rand_dns_server(),
-    lookup(Domain, Type, NSs).
 
 %% Internal Functions
 
