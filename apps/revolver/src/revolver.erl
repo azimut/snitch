@@ -3,8 +3,6 @@
 
 -export([lookup/2,lookup/3]).
 
-%% Api
-
 lookup(Domain, Type) ->
     lookup(Domain, Type, rand_dns_server()).
 lookup(Domain, Type, NSs) ->

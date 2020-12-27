@@ -18,3 +18,5 @@ TODO
 * ~~Return DNS status code response and save it~~
 * Ets stores all returned records even when only 1 was new
 * Load DNS servers from a file
+* Stats of how much is processing
+* Config file
