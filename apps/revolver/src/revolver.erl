@@ -10,7 +10,7 @@ lookup(Domain, Type) ->
 lookup(Domain, Type, NSs) ->
     Timeout = dns_timeout() * 1000,
     {Status, Record} = inet_res:nnslookup(Domain, in, Type, NSs, Timeout),
-    answers(Status, Domain, Type, Record).
+    answers(Status, Record).
 
 %% Internal Functions
 
@@ -35,10 +35,10 @@ dns_timeout() ->
         _ -> 10
     end.
 
-answers(error, Domain, Type, Error)           ->
-    {error, Domain, Type, Error};
-answers(ok, Domain, Type, #dns_rec{anlist=A}) ->
-    {ok, Domain, Type, get_data(A)}.
+answers(error, Error)           ->
+    {error, Error};
+answers(ok, #dns_rec{anlist=A}) ->
+    {ok, get_data(A)}.
 
 get_data([])                      -> [];
 get_data([#dns_rr{}=X|Xs])        -> [get_data(X)] ++ get_data(Xs);
