@@ -17,7 +17,7 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3, format_status/2]).
 
--export([list/0]).
+-export([list/0,load/0]).
 -export([add/1,del/1]).
 
 -define(SERVER, ?MODULE).
@@ -57,7 +57,6 @@ start_link() ->
           ignore.
 init([]) ->
     process_flag(trap_exit, true),
-    %% load dict from unique list of domains on ETS
     schedule(tick, ?TICK_SECONDS),
     {ok, #state{}}.
 
@@ -96,6 +95,18 @@ list() -> gen_server:call(?MODULE, list).
           {noreply, NewState :: term(), Timeout :: timeout()} |
           {noreply, NewState :: term(), hibernate} |
           {stop, Reason :: term(), NewState :: term()}.
+handle_cast(load,State) ->
+    io:format("prospector_pickaxe: LOADING...\n"),
+    Old = State#state.domains,
+    EtsDomains = sets:to_list(
+                   sets:from_list(
+                     lists:map(fun ({X,_,_,_}) -> X end,
+                               ets:tab2list(centralbank)))),
+    New = dict:from_list(
+            lists:map(fun (X) -> {X, next_gregorian_seconds()} end,
+                      EtsDomains)),
+    Merged = dict:merge(fun (_,V1,_) -> V1 end, Old, New),
+    {noreply, #state{domains=Merged}};
 handle_cast({add, RawDomain}, State) ->
     Domain = sanitize(RawDomain),
     NewDomains = add_if_missing(Domain, State#state.domains),
@@ -107,6 +118,7 @@ handle_cast({del, RawDomain}, State) ->
 handle_cast(_Request, State) ->
     {noreply, State}.
 
+load()      -> gen_server:cast(?MODULE, load).
 add(Domain) -> gen_server:cast(?MODULE, {add, Domain}).
 del(Domain) -> gen_server:cast(?MODULE, {del, Domain}).
 
@@ -177,7 +189,9 @@ format_status(_Opt, Status) ->
 %%%===================================================================
 
 sanitize(Domain) ->
-    string:lowercase(Domain).
+    Tmp1 = string:lowercase(Domain),
+    Tmp2 = string:split(Tmp1, ".", all),
+    lists:filter(fun (X) -> length(X) > 0  end, Tmp2).
 
 add_if_missing(Domain, Dict) ->
     add_if_missing(Domain, Dict, not dict:is_key(Domain, Dict)).

@@ -58,6 +58,7 @@ init([]) ->
     process_flag(trap_exit, true),
     banker_ets:init(),
     banker_ets:load(),
+    prospector_pickaxe:load(),
     schedule(checkpoint, ?CHECKPOINT_SECONDS),
     {ok, #state{}}.
 
