@@ -6,7 +6,7 @@
   {applications,
    [kernel,
     stdlib,
-    sheriff, prospector, banker
+    sheriff, prospector
    ]},
   {env,[]},
   {modules, []},

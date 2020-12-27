@@ -5,7 +5,8 @@
   {mod, {prospector_app, []}},
   {applications,
    [kernel,
-    stdlib
+    stdlib,
+    banker
    ]},
   {env,[]},
   {modules, []},
