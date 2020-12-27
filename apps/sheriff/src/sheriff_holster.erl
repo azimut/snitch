@@ -74,7 +74,7 @@ handle_call(_Request, _From, State) ->
     {reply, Reply, State}.
 
 sync_lookup(Domain, Type) ->
-    gen_server:call({local, ?MODULE}, {lookup, Domain, Type}).
+    gen_server:call(?MODULE, {lookup, Domain, Type}).
 
 %%--------------------------------------------------------------------
 %% @private
@@ -97,9 +97,9 @@ handle_cast(_Request, State)                     ->
     {noreply, State}.
 
 async_lookup(From, Domain)       ->
-    gen_server:cast({local, ?SERVER}, {lookup, From, Domain}).
+    gen_server:cast(?SERVER, {lookup, From, Domain}).
 async_lookup(From, Domain, Type) ->
-    gen_server:cast({local, ?SERVER}, {lookup, From, Domain, Type}).
+    gen_server:cast(?SERVER, {lookup, From, Domain, Type}).
 
 %%--------------------------------------------------------------------
 %% @private

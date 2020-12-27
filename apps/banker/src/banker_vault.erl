@@ -91,12 +91,15 @@ handle_call(_Request, _From, State) ->
           {noreply, NewState :: term(), Timeout :: timeout()} |
           {noreply, NewState :: term(), hibernate} |
           {stop, Reason :: term(), NewState :: term()}.
-handle_cast({store, error, _, _, timeout}, State)       ->
+handle_cast({store, error, Domain, Type, timeout}, State)       ->
+    io:format("TIMEOUT: ~s ~s\n", Domain, Type),
     {noreply, State};
 handle_cast({store, error, Domain, Type, Error}, State) ->
+    io:format("ERROR: ~s ~s\n", [Domain, Type]),
     banker_sql:insert(Domain, Type, Error),
     {noreply, State};
 handle_cast({store, ok, Domain, Type, Data}, State)     ->
+    io:format("OK: ~s ~s ~p\n", [Domain, Type,Data]),
     banker_sql:insert(Domain, Type, Data),
     banker_ets:insert(Domain, Type, Data),
     {noreply, State};
@@ -104,8 +107,7 @@ handle_cast(_Request, State)                            ->
     {noreply, State}.
 
 store(Status, Domain, Type, Data) ->
-    gen_server:cast({local, ?MODULE},
-                    {store, Status, Domain, Type, Data}).
+    gen_server:cast(?MODULE, {store, Status, Domain, Type, Data}).
 
 %%--------------------------------------------------------------------
 %% @private

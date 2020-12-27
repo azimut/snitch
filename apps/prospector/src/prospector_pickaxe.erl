@@ -17,6 +17,9 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3, format_status/2]).
 
+-export([list/0]).
+-export([add/1,del/1]).
+
 -define(SERVER, ?MODULE).
 -define(TICK_SECONDS, 60).
 -record(state, {domains=dict:new()}).
@@ -73,9 +76,14 @@ init([]) ->
           {noreply, NewState :: term(), hibernate} |
           {stop, Reason :: term(), Reply :: term(), NewState :: term()} |
           {stop, Reason :: term(), NewState :: term()}.
+handle_call(list, _From, State) ->
+    Reply = dict:to_list(State#state.domains),
+    {reply, Reply, State};
 handle_call(_Request, _From, State) ->
     Reply = ok,
     {reply, Reply, State}.
+
+list() -> gen_server:call(?MODULE, list).
 
 %%--------------------------------------------------------------------
 %% @private
@@ -92,12 +100,15 @@ handle_cast({add, RawDomain}, State) ->
     Domain = sanitize(RawDomain),
     NewDomains = add_if_missing(Domain, State#state.domains),
     {noreply, #state{domains=NewDomains}};
-handle_cast({delete, RawDomain}, State) ->
+handle_cast({del, RawDomain}, State) ->
     Domain = sanitize(RawDomain),
     NewDomains = dict:erase(Domain, State#state.domains),
     {noreply, #state{domains=NewDomains}};
 handle_cast(_Request, State) ->
     {noreply, State}.
+
+add(Domain) -> gen_server:cast(?MODULE, {add, Domain}).
+del(Domain) -> gen_server:cast(?MODULE, {del, Domain}).
 
 %%--------------------------------------------------------------------
 %% @private
@@ -115,7 +126,7 @@ handle_info(tick, State) ->
     Old = State#state.domains,
     New = dict:map(fun tick_domain/2, Old),
     {noreply, #state{domains=New}};
-handle_info({Status, Domain, Type, Data}, State) -> % lookup reply
+handle_info({Status, Data, Domain, Type}, State) -> % lookup reply
     banker_vault:store(Status, Domain, Type, Data),
     {noreply, State};
 handle_info(_Info, State) ->
@@ -171,8 +182,8 @@ sanitize(Domain) ->
 add_if_missing(Domain, Dict) ->
     add_if_missing(Domain, Dict, not dict:is_key(Domain, Dict)).
 
-add_if_missing(Domain, Dict, true) -> dict:store(Dict, Domain, 0);
-add_if_missing(_, Dict, _)         -> Dict.
+add_if_missing(Domain, Dict, true) -> dict:store(Domain, 0, Dict);
+add_if_missing(_     , Dict, _)    -> Dict.
 
 schedule(Msg, Seconds) ->
     erlang:send_after(Seconds * 1000, erlang:self(), Msg).

@@ -9,7 +9,7 @@ init() ->
 save() -> save(?TABLE_NAME, bag).
 load() -> load(?TABLE_NAME, bag).
 
-insert(_,_, [])             -> ok;
+insert(_,_,[])             -> ok;
 insert(Domain, Type, [H|T]) ->
     insert_if_new(Domain, Type, H),
     insert(Domain, Type, T).
