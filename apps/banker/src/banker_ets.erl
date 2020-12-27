@@ -11,12 +11,22 @@ load() -> load(?TABLE_NAME, bag).
 
 insert(_,_, [])             -> ok;
 insert(Domain, Type, [H|T]) ->
-    ets:insert(?TABLE_NAME, {Domain, Type, H}),
+    insert_if_new(Domain, Type, H),
     insert(Domain, Type, T).
 
-%% now_gregorian_seconds() ->
-%%     calendar:datetime_to_gregorian_seconds(
-%%       calendar:local_time()).
+insert_if_new(Domain, Type, Record) ->
+    Results = ets:match(?TABLE_NAME, {Domain, '_', Type, Record}),
+    insert_if_new(Domain, Type, Record, Results).
+
+insert_if_new(Domain, Type, Record, []) ->
+    Now = now_gregorian_seconds(),
+    ets:insert(?TABLE_NAME, {Domain, Now, Type, Record});
+insert_if_new(_,_,_,_)                  ->
+    ok.
+
+now_gregorian_seconds() ->
+    calendar:datetime_to_gregorian_seconds(
+      calendar:local_time()).
 
 load(Name, Type) ->
     {ok, Dets} = dets:open_file(Name, [{type,Type}]),
