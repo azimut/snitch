@@ -16,6 +16,7 @@
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3, format_status/2]).
+-export([store/4]).
 
 -define(CHECKPOINT_SECONDS, 5 * 60).
 -define(SERVER, ?MODULE).
@@ -90,11 +91,21 @@ handle_call(_Request, _From, State) ->
           {noreply, NewState :: term(), Timeout :: timeout()} |
           {noreply, NewState :: term(), hibernate} |
           {stop, Reason :: term(), NewState :: term()}.
-handle_cast({store, Domain, Type, Data}, State) ->
+handle_cast({store, error, _, _, timeout}, State)       ->
+    {noreply, State};
+handle_cast({store, error, Domain, Type, Error}, State) ->
+    banker_sql:insert(Domain, Type, Error),
+    {noreply, State};
+handle_cast({store, ok, Domain, Type, Data}, State)     ->
+    banker_sql:insert(Domain, Type, Data),
     banker_ets:insert(Domain, Type, Data),
     {noreply, State};
-handle_cast(_Request, State) ->
+handle_cast(_Request, State)                            ->
     {noreply, State}.
+
+store(Status, Domain, Type, Data) ->
+    gen_server:cast({local, ?MODULE},
+                    {store, Status, Domain, Type, Data}).
 
 %%--------------------------------------------------------------------
 %% @private

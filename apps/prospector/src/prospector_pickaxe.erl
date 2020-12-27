@@ -54,6 +54,7 @@ start_link() ->
           ignore.
 init([]) ->
     process_flag(trap_exit, true),
+    %% load dict from unique list of domains on ETS
     schedule(tick, ?TICK_SECONDS),
     {ok, #state{}}.
 
@@ -114,8 +115,8 @@ handle_info(tick, State) ->
     Old = State#state.domains,
     New = dict:map(fun tick_domain/2, Old),
     {noreply, #state{domains=New}};
-handle_info({State, Domain, Type, Data}, State) -> % lookup reply
-    banker_vault:store(State, Domain, Type, Data),
+handle_info({Status, Domain, Type, Data}, State) -> % lookup reply
+    banker_vault:store(Status, Domain, Type, Data),
     {noreply, State};
 handle_info(_Info, State) ->
     {noreply, State}.
