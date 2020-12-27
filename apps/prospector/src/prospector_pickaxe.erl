@@ -57,6 +57,7 @@ start_link() ->
           ignore.
 init([]) ->
     process_flag(trap_exit, true),
+    load(),
     schedule(tick, ?TICK_SECONDS),
     {ok, #state{}}.
 
@@ -191,7 +192,8 @@ format_status(_Opt, Status) ->
 sanitize(Domain) ->
     Tmp1 = string:lowercase(Domain),
     Tmp2 = string:split(Tmp1, ".", all),
-    lists:filter(fun (X) -> length(X) > 0  end, Tmp2).
+    Tmp3 = lists:filter(fun (X) -> length(X) > 0  end, Tmp2),
+    string:join(Tmp3, ".").
 
 add_if_missing(Domain, Dict) ->
     add_if_missing(Domain, Dict, not dict:is_key(Domain, Dict)).

@@ -96,7 +96,7 @@ handle_cast({store, error, Domain, Type, timeout}, State)       ->
     io:format("TIMEOUT: ~s ~s\n", Domain, Type),
     {noreply, State};
 handle_cast({store, error, Domain, Type, Error}, State) ->
-    io:format("ERROR: ~s ~s\n", [Domain, Type]),
+    io:format("ERROR: ~s ~s ~p\n", [Domain, Type, Error]),
     banker_sql:insert(Domain, Type, Error),
     {noreply, State};
 handle_cast({store, ok, Domain, Type, Data}, State)     ->
