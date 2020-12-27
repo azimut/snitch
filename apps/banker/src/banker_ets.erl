@@ -6,20 +6,24 @@
 init() ->
     ?TABLE_NAME = ets:new(?TABLE_NAME, [bag, protected, named_table]).
 
-load() ->
-    {ok, Dets} = dets:open_file(?TABLE_NAME, [{type,bag}]),
-    ets:delete_all_objects(?TABLE_NAME),
-    ets:from_dets(?TABLE_NAME, Dets),
-    dets:close(Dets).
+save() -> save(?TABLE_NAME, bag).
+load() -> load(?TABLE_NAME, bag).
 
-save() ->
-    {ok, Dets} = dets:open_file(?TABLE_NAME, [{type,bag}]),
-    ets:to_dets(?TABLE_NAME, Dets),
-    dets:close(Dets).
-
-insert(Domain, Type, Data) ->
-    ets:insert_new(?TABLE_NAME, {Domain, Type, Data}).
+insert(_,_, [])             -> ok;
+insert(Domain, Type, [H|T]) ->
+    ets:insert(?TABLE_NAME, {Domain, Type, H}),
+    insert(Domain, Type, T).
 
 %% now_gregorian_seconds() ->
 %%     calendar:datetime_to_gregorian_seconds(
 %%       calendar:local_time()).
+
+load(Name, Type) ->
+    {ok, Dets} = dets:open_file(Name, [{type,Type}]),
+    ets:delete_all_objects(Name),
+    ets:from_dets(Name, Dets),
+    dets:close(Dets).
+save(Name, Type) ->
+    {ok, Dets} = dets:open_file(Name, [{type,Type}]),
+    ets:to_dets(Name, Dets),
+    dets:close(Dets).
