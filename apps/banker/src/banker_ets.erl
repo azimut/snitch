@@ -4,7 +4,7 @@
 -export([load/0,save/0,init/0,insert/3]).
 
 init() ->
-    ets:new(?TABLE_NAME, [bag, public, named_table]).
+    ?TABLE_NAME = ets:new(?TABLE_NAME, [bag, protected, named_table]).
 
 load() ->
     {ok, Dets} = dets:open_file(?TABLE_NAME, [{type,bag}]),
