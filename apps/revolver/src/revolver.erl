@@ -4,7 +4,7 @@
 -export([lookup/2,lookup/3,lookup/4]).
 
 lookup(Domain, Type) ->
-    lookup(Domain, Type, rand_dns_server()).
+    lookup(Domain, Type, dns_server()).
 lookup(Domain, Type, NSs) ->
     Timeout = dns_timeout() * 1000,
     lookup(Domain, Type, NSs, Timeout).
@@ -17,7 +17,7 @@ lookup(Domain, Type, NSs, Timeout) ->
 
 %% TODO: Assumes port 53
 %% TODO: random seed?
-rand_dns_server() ->
+dns_server() ->
     Nss = dns_servers(),
     [{lists:nth(
         rand:uniform(erlang:length(Nss)),
