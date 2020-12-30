@@ -207,7 +207,7 @@ schedule(Msg, Seconds) ->
 tick_domain(Domain, Gregorian) ->
     tick_domain(Domain, Gregorian, now_gregorian_seconds()).
 tick_domain(Domain, Gregorian, Now)
-  when Now > Gregorian ->
+  when Now >= Gregorian ->
     sheriff_holster:async_lookup(erlang:self(), Domain),
     next_gregorian_seconds();
 tick_domain(_, Gregorian, Now)
