@@ -5,7 +5,7 @@
 -export([start_link/0]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3, format_status/2]).
--export([list/0,load/0,add/1,del/1]).
+-export([load/0,add/1,del/1]).
 
 -record(state, {domains=dict:new()}).
 
@@ -14,7 +14,6 @@
 -define(TICK_SECONDS_RANGE, 12*60*60).
 -define(ETS_TABLE_NAME, centralbank).
 
-list()      -> gen_server:call(?MODULE, list).
 load()      -> gen_server:cast(?MODULE, load).
 add(Domain) -> gen_server:cast(?MODULE, {add, Domain}).
 del(Domain) -> gen_server:cast(?MODULE, {del, Domain}).
@@ -27,13 +26,6 @@ init([]) ->
     load(),
     schedule(tick, ?TICK_SECONDS),
     {ok, #state{}}.
-
-handle_call(list, _From, State) ->
-    Reply = dict:to_list(State#state.domains),
-    {reply, Reply, State};
-handle_call(_Request, _From, State) ->
-    Reply = ok,
-    {reply, Reply, State}.
 
 handle_cast(load,State) ->
     io:format("prospector_pickaxe: LOADING...\n"),
@@ -69,6 +61,8 @@ handle_info({Status, Data, Domain, Type}, State) -> % lookup reply
 handle_info(_Info, State) ->
     {noreply, State}.
 
+handle_call(_Request, _From, State) ->
+    {reply, ok, State}.
 terminate(_Reason, _State) ->
     ok.
 code_change(_OldVsn, State, _Extra) ->
