@@ -5,13 +5,14 @@
 -export([start_link/0]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3, format_status/2]).
+-export([list/0,load/0,add/1,del/1]).
 
--export([list/0,load/0]).
--export([add/1,del/1]).
+-record(state, {domains=dict:new()}).
 
 -define(SERVER, ?MODULE).
 -define(TICK_SECONDS, 60).
--record(state, {domains=dict:new()}).
+-define(TICK_SECONDS_RANGE, 12*60*60).
+-define(ETS_TABLE_NAME, centralbank).
 
 list()      -> gen_server:call(?MODULE, list).
 load()      -> gen_server:cast(?MODULE, load).
@@ -40,9 +41,9 @@ handle_cast(load,State) ->
     EtsDomains = sets:to_list(
                    sets:from_list(
                      lists:map(fun ({X,_,_,_}) -> X end,
-                               ets:tab2list(centralbank)))),
+                               ets:tab2list(?ETS_TABLE_NAME)))),
     New = dict:from_list(
-            lists:map(fun (X) -> {X, next_gregorian_seconds()} end,
+            lists:map(fun (X) -> {X, future_gregorian_seconds()} end,
                       EtsDomains)),
     Merged = dict:merge(fun (_,V1,_) -> V1 end, Old, New),
     {noreply, #state{domains=Merged}};
@@ -87,28 +88,27 @@ sanitize(Domain) ->
 
 add_if_missing(Domain, Dict) ->
     add_if_missing(Domain, Dict, not dict:is_key(Domain, Dict)).
-
 add_if_missing(Domain, Dict, true) -> dict:store(Domain, 0, Dict);
-add_if_missing(_     , Dict, _)    -> Dict.
+add_if_missing(_Domain, Dict, _State) -> Dict.
 
 schedule(Msg, Seconds) ->
     erlang:send_after(Seconds * 1000, erlang:self(), Msg).
 
-tick_domain(Domain, Gregorian) ->
-    tick_domain(Domain, Gregorian, now_gregorian_seconds()).
-tick_domain(Domain, Gregorian, Now)
-  when Now >= Gregorian ->
+tick_domain(Domain, Future) ->
+    tick_domain(Domain, Future, now_gregorian_seconds()).
+tick_domain(_Domain, Future, Now)
+  when Now < Future ->
+    Future;
+tick_domain(Domain, Future, Now)
+  when Now >= Future ->
     sheriff_holster:async_lookup(erlang:self(), Domain),
-    next_gregorian_seconds();
-tick_domain(_, Gregorian, Now)
-  when Now < Gregorian ->
-    Gregorian.
+    future_gregorian_seconds().
 
 now_gregorian_seconds() ->
     calendar:datetime_to_gregorian_seconds(
       calendar:local_time()).
 
-next_gregorian_seconds() ->
+future_gregorian_seconds() ->
     Now = now_gregorian_seconds(),
-    Next = rand:uniform(12 * 60 * 60),
-    Now + Next.
+    Delta = rand:uniform(?TICK_SECONDS_RANGE),
+    Now + Delta.
