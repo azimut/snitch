@@ -2,7 +2,7 @@
 -export([express/2]).
 
 express(From, Domain) ->
-    {State, Data} = revolver:lookup(Domain, cname),
+    {State, Data} = sheriff_revolver:lookup(Domain, cname),
     gishgallop(State, From, Domain, Data).
 
 %% Internal Functions
@@ -18,7 +18,7 @@ gishgallop(Status,From,Domain,Data) ->
     From ! lookup(Domain, cname, Status, Data).
 
 lookup(Domain, Type) ->
-    {Status, Data} = revolver:lookup(Domain, Type),
+    {Status, Data} = sheriff_revolver:lookup(Domain, Type),
     lookup(Domain, Type, Status, Data).
 lookup(Domain, Type, Status, Data) ->
     {Status, Data, Domain, Type}.
