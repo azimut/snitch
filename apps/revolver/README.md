@@ -1,7 +1,7 @@
 revolver
 =====
 
-An OTP library, that wraps inet_res:nsslookup and returns a string out of each type of record.
+An OTP library, wrapper of inet_res:nsslookup. Returns a string.
 
 Build
 -----
