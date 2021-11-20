@@ -1,7 +1,10 @@
 -module(revolver).
 -include_lib("kernel/src/inet_dns.hrl").
-
 -export([lookup/2,lookup/3,lookup/4]).
+
+-define(DEFAULT_TIMEOUT_SECONDS,5).
+-define(DEFAULT_DNS_PORT,53).
+-define(DEFAULT_DNS_SERVERS,[{8,8,8,8},{8,8,4,4},{1,1,1,1},{9,9,9,9}]).
 
 lookup(Domain, Type) ->
     lookup(Domain, Type, dns_server()).
@@ -15,25 +18,23 @@ lookup(Domain, Type, NSs, Timeout) ->
 
 %% Internal Functions
 
-%% TODO: Assumes port 53
-%% TODO: random seed?
 dns_server() ->
     Nss = dns_servers(),
     [{lists:nth(
         rand:uniform(erlang:length(Nss)),
         Nss),
-      53}].
+      ?DEFAULT_DNS_PORT}].
 
 dns_servers() ->
     case application:get_env(?MODULE, dns_servers) of
         {ok, Value} -> Value;
-        _ -> [{8,8,8,8},{8,8,4,4},{1,1,1,1},{9,9,9,9}]
+        _ -> ?DEFAULT_DNS_SERVERS
     end.
 
 dns_timeout() ->
     case application:get_env(?MODULE, dns_timeout) of
         {ok, Value} -> Value;
-        _ -> 10
+        _ -> ?DEFAULT_TIMEOUT_SECONDS
     end.
 
 answers(#dns_rec{anlist=Answers})  -> parse(Answers);
