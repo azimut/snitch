@@ -19,15 +19,18 @@ lookup(Domain, Type, NSs, Timeout) ->
 %% Internal Functions
 
 answers(#dns_rec{anlist=Answers})  -> parse(Answers);
-answers(Error) when is_atom(Error) -> Error.
+answers(Error)
+  when is_atom(Error) ->
+    Error.
 
 parse([])                      -> [];
 parse([#dns_rr{}=X|Xs])        -> [parse(X)] ++ parse(Xs);
 parse(#dns_rr{type = a}=X)     -> inet:ntoa(X#dns_rr.data);
 parse(#dns_rr{type = aaaa}=X)  -> inet:ntoa(X#dns_rr.data);
 parse(#dns_rr{type = mx}=X)    -> erlang:element(2, X#dns_rr.data);
-parse(#dns_rr{type = soa}=X)   -> erlang:integer_to_list(
-                                    erlang:element(3, X#dns_rr.data));
+parse(#dns_rr{type = soa}=X)   ->
+    Record = X#dns_rr.data,
+    [erlang:element(Nth, Record) || Nth <- lists:seq(1,tuple_size(Record))];
 parse(#dns_rr{type = ns}=X)    -> X#dns_rr.data;
 parse(#dns_rr{type = cname}=X) -> X#dns_rr.data;
 parse(#dns_rr{type = txt}=X)   -> lists:nth(1,X#dns_rr.data).
