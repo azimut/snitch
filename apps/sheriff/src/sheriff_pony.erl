@@ -15,10 +15,8 @@ gishgallop(ok,From,Domain,[]) ->
     From ! lookup(Domain,ns),
     From ! lookup(Domain,txt);
 gishgallop(Status,From,Domain,Data) ->
-    From ! lookup(Domain, cname, Status, Data).
+    From ! {Status, Data, Domain, cname}.
 
 lookup(Domain, Type) ->
     {Status, Data} = sheriff_revolver:lookup(Domain, Type),
-    lookup(Domain, Type, Status, Data).
-lookup(Domain, Type, Status, Data) ->
     {Status, Data, Domain, Type}.

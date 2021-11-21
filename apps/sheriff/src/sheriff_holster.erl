@@ -9,8 +9,6 @@
 async_lookup(From, Domain)       ->
     gen_server:cast(?SERVER, {lookup, From, Domain}).
 
-%% Default Functions
-
 start_link() ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
