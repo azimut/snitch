@@ -4,9 +4,9 @@
 -export([start_link/0,init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3, format_status/2]).
 -define(SERVER, ?MODULE).
--record(state, {}).
+-record(state, {servers=[],timeout=1000}).
 
-async_lookup(From, Domain)       ->
+async_lookup(From, Domain) ->
     gen_server:cast(?SERVER, {lookup, From, Domain}).
 
 start_link() ->
@@ -14,12 +14,15 @@ start_link() ->
 
 init([]) ->
     process_flag(trap_exit, true),
-    {ok, #state{}}.
+    Timeout = sheriff_default:dns_timeout(),
+    NSs = sheriff_default:dns_servers(),
+    {ok, #state{servers=NSs,timeout=Timeout}}.
 
-handle_cast({lookup, From, Domain}, State)       ->
-    erlang:spawn(sheriff_pony, express, [From, Domain]),
+handle_cast({lookup, From, Domain}, #state{timeout=Timeout, servers=NSs}=State) ->
+    NS = random_dns_server(NSs),
+    erlang:spawn(sheriff_pony, express, [From, Domain, NS, Timeout]),
     {noreply, State};
-handle_cast(_Request, State)                     ->
+handle_cast(_Request, State) ->
     {noreply, State}.
 
 handle_call(_Request, _From, State) ->
@@ -33,3 +36,9 @@ code_change(_OldVsn, State, _Extra) ->
 format_status(_Opt, Status) ->
     Status.
 
+%% Internal Functions
+
+random_dns_server(NSs) ->
+    [{lists:nth(
+        rand:uniform(erlang:length(NSs)),
+        NSs), 53}].

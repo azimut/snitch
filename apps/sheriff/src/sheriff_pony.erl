@@ -1,8 +1,8 @@
 -module(sheriff_pony).
--export([express/2]).
+-export([express/4]).
 
-express(From, Domain) ->
-    {State, Data} = sheriff_revolver:lookup(Domain, cname),
+express(From, Domain, NS, Timeout) ->
+    {State, Data} = sheriff_revolver:lookup(Domain, cname, NS, Timeout),
     gishgallop(State, From, Domain, Data).
 
 %% Internal Functions
