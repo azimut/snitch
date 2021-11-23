@@ -18,8 +18,6 @@ defmodule Snitch.Mixfile do
 
   defp deps() do
     [
-      {:remittance, in_umbrella: true},
-      {:revolver, in_umbrella: true, manager: :rebar3},
       {:banker, in_umbrella: true, manager: :rebar3},
       {:prospector, in_umbrella: true, manager: :rebar3},
       {:sheriff, in_umbrella: true, manager: :rebar3}
