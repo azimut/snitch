@@ -6,8 +6,8 @@
   {applications,
    [kernel,
     stdlib,
-    sheriff,
-    banker
+    sheriff
+    %% banker
    ]},
   {env,[]},
   {modules, []},
