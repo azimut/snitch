@@ -41,11 +41,11 @@ handle_info(tick, State) ->
     Old = State#state.domains,
     New = dict:map(fun tick_domain/2, Old),
     {noreply, #state{domains=New}};
-handle_info({ok, Domain, QType, {RType, RList}}, State) ->
-    banker_vault:insert(ok, Domain, QType, RType, RList),
+handle_info({ok, NS, Domain, QType, {RType, RList}}, State) ->
+    banker_vault:insert(ok, Domain, NS, QType, RType, RList),
     {noreply, State};
-handle_info({error, Domain, QType, Error}, State) ->
-    banker_vault:insert(error, Domain, QType, nil, Error),
+handle_info({error, NS, Domain, QType, Error}, State) ->
+    banker_vault:insert(error, Domain, NS, QType, nil, Error),
     {noreply, State};
 handle_info(_Info, State) ->
     {noreply, State}.

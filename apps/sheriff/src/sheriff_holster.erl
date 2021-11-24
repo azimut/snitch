@@ -14,13 +14,13 @@ start_link() ->
 
 init([]) ->
     process_flag(trap_exit, true),
-    Timeout = sheriff_default:dns_timeout(),
+    Timeout = sheriff_default:dns_timeout() * 1000,
     NSs = sheriff_default:dns_servers(),
     {ok, #state{servers=NSs,timeout=Timeout}}.
 
 handle_cast({lookup, From, Domain}, #state{timeout=Timeout, servers=NSs}=State) ->
     NS = random_dns_server(NSs),
-    erlang:spawn(sheriff_pony, express, [From, Domain, NS, Timeout]),
+    erlang:spawn(sheriff_pony, express, [From,Domain,NS,Timeout]),
     {noreply, State};
 handle_cast(_Request, State) ->
     {noreply, State}.
