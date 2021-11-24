@@ -24,14 +24,14 @@ init([]) ->
                   timeout  => 4000}),
     {ok, #state{conn=C}}.
 
-handle_cast({insert,_NS,_Status,_Domain,_QType,_RType, []}, State) ->
+handle_cast({insert,_Status,_Domain,_NS,_QType,_RType, []}, State) ->
     {noreply, State};
-handle_cast({insert, NS, Status, Domain, QType, RType, [H|T]}, State)
+handle_cast({insert, Status, Domain, NS, QType, RType, [H|T]}, State)
   when erlang:is_list(H) -> % head is a string
-    handle_cast({insert, NS, Status, Domain, QType, RType, H}, State),
-    handle_cast({insert, NS, Status, Domain, QType, RType, T}, State),
+    handle_cast({insert, Status, Domain, NS, QType, RType, H}, State),
+    handle_cast({insert, Status, Domain, NS, QType, RType, T}, State),
     {noreply, State};
-handle_cast({insert, NS, Status, Domain, QType, RType, Result}, #state{conn=C}=State) ->
+handle_cast({insert, Status, Domain, NS, QType, RType, Result}, #state{conn=C}=State) ->
     Query = "INSERT INTO dns_data (domain_name,server,qtype,rtype,response,rcode) VALUES ($1,$2,$3,$4,$5,$6) ON CONFLICT DO NOTHING",
     Parameters = [Domain, NS, QType, RType, Result, Status],
     {ok, _} = epgsql:equery(C, Query, Parameters),
