@@ -1,0 +1,1 @@
+-record(dns_data, {status :: atom(), domain :: string(), ns :: string(), qry :: atom(), ans :: atom(), result :: string()}).

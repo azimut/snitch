@@ -1,15 +1,14 @@
 {application, banker,
  [{description, "inserts DNS records on a PSQL table"},
   {vsn, "0.1.0"},
-  {registered, []},
+  {registered, [banker_sup]},
   {mod, {banker_app, []}},
   {applications,
    [kernel,
     stdlib
    ]},
   {env,[]},
-  {modules, []},
-
+  {modules, [banker_sup, banker_vault, banker]},
   {licenses, ["Apache 2.0"]},
   {links, []}
  ]}.
