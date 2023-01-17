@@ -2,29 +2,34 @@
 -behaviour(gen_server).
 -export([start_link/0,init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3, format_status/2]).
+-export([lookup/1]).
 -define(SERVER, ?MODULE).
--record(state, {timeout=1000}).
+-record(state, {}).
 -include("header.hrl").
+
+lookup(Domain) -> gen_server:cast(?SERVER, {lookup, Domain}).
 
 start_link() ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
-init([Domain, Timeout]) ->
+init([]) ->
     process_flag(trap_exit, true),
-    {ok, #state{timeout=Timeout}}.
+    {ok, #state{}}.
 
-handle_cast({lookup, From, Domain}, #state{timeout=Timeout}=State) ->
+handle_cast({lookup, Domain}, State) ->
     NS = mattress:random_dns_server(),
-    erlang:spawn(sheriff_revolver, shoot, [From,Domain,NS,Timeout]),
+    Timeout = 5 * 1000,
+    Arguments = [self(),Domain, {NS,53}, Timeout],
+    proc_lib:spawn(sheriff_revolver, shoot, Arguments),
     {noreply, State};
-handle_cast(_Request, State) ->
-    {noreply, State}.
+handle_cast(_Request, State) -> {noreply, State}.
 
-handle_info({ok, NS, Domain, QType, {RType, RList}}, State) ->
-    banker_vault:insert(ok, Domain, NS, QType, RType, RList),
+handle_info({ok, #results{qtype=QType,rtype=RType,domain=Domain,server=NS,answers=Answers}}, State) ->
+    lists:map(fun (Answer) -> banker:insert(Domain, NS, QType, RType, Answer)
+              end, Answers),
     {noreply, State};
-handle_info({error, NS, Domain, QType, Error}, State) ->
-    banker_vault:insert(error, Domain, NS, QType, nil, Error),
+handle_info({error, #error{qtype=QType,server=NS,domain=Domain,reason=Reason}}, State) ->
+    banker:insert_error(Domain, QType, NS, Reason),
     {noreply, State};
 handle_info(_Info, State) -> {noreply, State}.
 

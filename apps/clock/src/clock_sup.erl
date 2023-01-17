@@ -1,4 +1,4 @@
--module(banker_sup).
+-module(clock_sup).
 -behaviour(supervisor).
 -export([start_link/0]).
 -export([init/1]).
@@ -11,10 +11,10 @@ init([]) ->
     SupFlags = #{strategy  => one_for_all,
                  intensity => 0,
                  period    => 1},
-    ChildSpc = #{id        => banker,
-                 start     => {banker_vault,start_link,[]},
+    ChildSpc = #{id        => clock,
+                 start     => {clock_clock,start_link,[]},
                  restart   => permanent,
                  shutdown  => 2000,
                  type      => worker,
-                 modules   => [banker_vault]},
+                 modules   => [clock_clock]},
     {ok, {SupFlags, [ChildSpc]}}.

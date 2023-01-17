@@ -5,11 +5,11 @@
   {mod, {mattress_app, []}},
   {applications,
    [kernel,
-    stdlib
+    stdlib,
+    clock
    ]},
   {env,[]},
   {modules, []},
-
   {licenses, ["Apache-2.0"]},
   {links, []}
  ]}.

@@ -1,4 +1,4 @@
-prospector
+clock
 =====
 
 An OTP application

@@ -2,9 +2,20 @@
 -behaviour(gen_server).
 -export([start_link/0]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3, format_status/2]).
+-export([insert/5,insert_error/4]).
 -define(SERVER, ?MODULE).
 -record(state, {conn}).
 -include("header.hrl").
+
+-spec insert(string(), inet:ip_address(), inet_res:dns_rr_type(), inet_res:dns_rr_type(), string()) -> ok.
+insert(Domain, Ns, QType, RType, Result) ->
+    Data = #dns_data{domain = Domain, ns = Ns, qtype = QType, rtype = RType, result = Result},
+    gen_server:cast(?SERVER, {ok, Data}).
+
+-spec insert_error(string(), inet_res:dns_rr_type(), inet:ip_address(), atom()) -> ok.
+insert_error(Domain, Type, NS, ECode) ->
+    Error = #dns_error{domain = Domain, qtype = Type, ns = NS, rerror = ECode},
+    gen_server:cast(?SERVER, {error, Error}).
 
 start_link() ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
@@ -20,17 +31,26 @@ init([]) ->
                   timeout          => 4 * 1000}),
     {ok, #state{conn=C}}.
 
-handle_cast({insert, #dns_data{}=D}, #state{conn=C}=State) ->
-    SQL = "INSERT INTO dns_data (domain_name,server,qtype,rtype,response,rcode)" ++
-        "  VALUES ($1,$2,$3,$4,$5,$6)" ++
+handle_cast({ok, #dns_data{}=D}, #state{conn=Conn}=State) ->
+    SQL = "INSERT INTO dns_data (domain_name,dns,qtype,rtype,response)" ++
+        "  VALUES ($1,$2,$3,$4,$5)" ++
         "  ON CONFLICT DO NOTHING",
     Parameters = [D#dns_data.domain,
                   D#dns_data.ns,
-                  D#dns_data.qry,
-                  D#dns_data.ans,
-                  D#dns_data.result,
-                  D#dns_data.status],
-    {ok, _} = epgsql:equery(C, SQL, Parameters),
+                  erlang:atom_to_list(D#dns_data.qtype),
+                  erlang:atom_to_list(D#dns_data.rtype),
+                  D#dns_data.result],
+    {ok, _} = epgsql:equery(Conn, SQL, Parameters),
+    {noreply, State};
+handle_cast({error, #dns_error{}=E}, #state{conn=Conn}=State) ->
+    SQL = "INSERT INTO dns_error (domain_name,qtype,rerror,dns)" ++
+        "  VALUES ($1,$2,$3,$4)" ++
+        "  ON CONFLICT DO NOTHING",
+    Parameters = [E#dns_error.domain,
+                  erlang:atom_to_list(E#dns_error.qtype),
+                  erlang:atom_to_list(E#dns_error.rerror),
+                  E#dns_error.ns],
+    {ok, _} = epgsql:equery(Conn, SQL, Parameters),
     {noreply, State};
 handle_cast(_Request, State) ->
     {noreply, State}.

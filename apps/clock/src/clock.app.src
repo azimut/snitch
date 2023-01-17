@@ -1,17 +1,14 @@
-{application, prospector,
+{application, clock,
  [{description, "Schedules DNS requests"},
   {vsn, "0.1.0"},
-  {registered, []},
-  {mod, {prospector_app, []}},
+  {registered, [clock_sup,clock_clock]},
+  {mod, {clock_app, []}},
   {applications,
    [kernel,
-    stdlib,
-    sheriff
-    %% banker
+    stdlib
    ]},
   {env,[]},
-  {modules, []},
-
+  {modules, [clock,clock_sup, clock_clock]},
   {licenses, ["Apache 2.0"]},
   {links, []}
  ]}.

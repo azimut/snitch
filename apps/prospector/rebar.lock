@@ -1,4 +1,0 @@
-[{<<"gen_cycle">>,
-  {git,"https://github.com/aerosol/gen_cycle.git",
-       {ref,"34782726521b17a6ea7b397c7eae5a009e8798f7"}},
-  0}].

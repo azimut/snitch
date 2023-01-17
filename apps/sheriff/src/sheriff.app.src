@@ -1,16 +1,16 @@
 {application, sheriff,
  [{description, "Spawns DNS requests and returns array of strings, async"},
   {vsn, "0.1.0"},
-  {registered, []},
+  {registered, [sheriff_sup]},
   {mod, {sheriff_app, []}},
   {applications,
    [kernel,
     stdlib,
-    utils
+    banker,
+    mattress
    ]},
   {env,[]},
-  {modules, []},
-
+  {modules, [sheriff, sheriff_sup, sheriff_revolver, sheriff_holster, sheriff_default]},
   {licenses, ["Apache 2.0"]},
   {links, []}
  ]}.
