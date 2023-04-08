@@ -55,8 +55,10 @@ handle_cast({error, #dns_error{}=E}, #state{conn=Conn}=State) ->
 handle_cast(_Request, State) ->
     {noreply, State}.
 
+terminate(_Reason, #state{conn=Conn}) ->
+    epgsql:close(Conn).
+
 handle_call(_Request, _From, State) -> {reply, ok, State}.
 handle_info(_Info, State) -> {noreply, State}.
-terminate(_Reason, _State) -> ok.
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
 format_status(_Opt, Status) -> Status.

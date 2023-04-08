@@ -7,7 +7,7 @@
 -define(DOMAIN_FILE, "/home/sendai/domains.txt").
 -define(DNS_SERVERS_FILE, "/home/sendai/dns_servers.txt").
 -record(state, {dns_servers = [] :: list(inet:ip_address()),
-                domains = [] :: list(string())}).
+                domains     = [] :: list(string())}).
 
 %%%===================================================================
 %%% API
@@ -49,8 +49,8 @@ init([]) ->
 handle_call(domains, _From, State) ->
     {reply, {ok, State#state.domains}, State};
 handle_call(random_dns_server, _From, #state{dns_servers = DNSServers}=State) ->
-    SomeServer = lists:nth(rand:uniform(erlang:length(DNSServers)), DNSServers),
-    {reply, {ok, SomeServer}, State};
+    RandomDNSServer = lists:nth(rand:uniform(erlang:length(DNSServers)), DNSServers),
+    {reply, {ok, RandomDNSServer}, State};
 handle_call(_Request, _From, State) ->
     {reply, ok, State}.
 
@@ -95,11 +95,11 @@ file_lines(Filename) ->
 -spec load() -> #state{}.
 load() ->
     #state{dns_servers = lists:map(fun parse_address/1, file_lines(?DNS_SERVERS_FILE)),
-           domains = file_lines(?DOMAIN_FILE)}.
+           domains     = file_lines(?DOMAIN_FILE)}.
 
 -spec save(#state{}) -> ok.
 save(#state{domains = Domains, dns_servers = DNSServers}) ->
+    ok = file:write_file(?DOMAIN_FILE, [string:join(Domains, "\n")]),
     IPs = lists:map(fun inet:ntoa/1, DNSServers),
     ok = file:write_file(?DNS_SERVERS_FILE, [string:join(IPs, "\n")]),
-    ok = file:write_file(?DOMAIN_FILE, [string:join(Domains, "\n")]),
     ok.

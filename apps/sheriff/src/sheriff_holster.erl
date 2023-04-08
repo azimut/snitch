@@ -25,8 +25,8 @@ handle_cast({lookup, Domain}, State) ->
 handle_cast(_Request, State) -> {noreply, State}.
 
 handle_info({ok, #results{qtype=QType,rtype=RType,domain=Domain,server=NS,answers=Answers}}, State) ->
-    lists:map(fun (Answer) -> banker:insert(Domain, NS, QType, RType, Answer)
-              end, Answers),
+    lists:foreach(fun (Answer) -> banker:insert(Domain, NS, QType, RType, Answer) end,
+                  Answers),
     {noreply, State};
 handle_info({error, #error{qtype=QType,server=NS,domain=Domain,reason=Reason}}, State) ->
     banker:insert_error(Domain, QType, NS, Reason),
