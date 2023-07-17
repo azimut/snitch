@@ -1,5 +1,6 @@
 snitch
 =====
+[![Build](https://github.com/azimut/snitch/actions/workflows/main.yml/badge.svg)](https://github.com/azimut/snitch/actions/workflows/main.yml)
 
 An OTP application, that periodically queries provided DNS domains. And inserts them on a postgresql database. Opinionated on which fields are recorded.
 
