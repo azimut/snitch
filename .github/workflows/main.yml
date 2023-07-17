@@ -1,0 +1,20 @@
+name: Build
+
+on:
+  push:
+    paths-ignore:
+      - 'LICENSE'
+      - 'README.md'
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/checkout@v3
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: 25.1.2
+          rebar3-version: 3.20.0
+      - run: rebar3 ct
