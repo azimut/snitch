@@ -9,7 +9,7 @@
 
 -spec insert(string(), inet:ip_address(), inet_res:dns_rr_type(), inet_res:dns_rr_type(), string()) -> ok.
 insert(Domain, Ns, QType, RType, Result) ->
-    Data = #dns_data{domain = Domain, ns = Ns, qtype = QType, rtype = RType, result = Result},
+    Data = #dns_data{domain = Domain, qtype = QType, rtype = RType, ns = Ns, result = Result},
     gen_server:cast(?SERVER, {ok, Data}).
 
 -spec insert_error(string(), inet_res:dns_rr_type(), inet:ip_address(), atom()) -> ok.
