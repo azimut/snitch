@@ -8,7 +8,7 @@
     stdlib
    ]},
   {env,[]},
-  {modules, [clock,clock_sup, clock_clock]},
+  {modules, []},
   {licenses, ["Apache 2.0"]},
   {links, []}
  ]}.

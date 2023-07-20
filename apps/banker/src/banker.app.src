@@ -8,7 +8,7 @@
     stdlib
    ]},
   {env,[]},
-  {modules, [banker_sup, banker_vault, banker]},
+  {modules, []},
   {licenses, ["Apache 2.0"]},
   {links, []}
  ]}.

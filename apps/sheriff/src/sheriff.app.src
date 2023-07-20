@@ -10,7 +10,7 @@
     mattress
    ]},
   {env,[]},
-  {modules, [sheriff, sheriff_sup, sheriff_revolver, sheriff_holster, sheriff_default]},
+  {modules, []},
   {licenses, ["Apache 2.0"]},
   {links, []}
  ]}.
