@@ -8,6 +8,8 @@
 
 -define(SERVER, ?MODULE).
 -define(TICK_SECONDS, 10).
+-define(TICK_SECONDS_MIN, 60*30).
+-define(TICK_SECONDS_MAX, 2*60*60).
 
 -spec add(Domain :: string()) -> ok.
 add(Domain) -> gen_server:cast(?MODULE, {add, sanitize(Domain)}).
@@ -86,7 +88,7 @@ sanitize(Domain) ->
     string:join(Tmp3, ".").
 
 -spec next_timeout() -> non_neg_integer().
-next_timeout() -> random_between(60*30, 2*60*60).
+next_timeout() -> random_between(?TICK_SECONDS_MIN, ?TICK_SECONDS_MAX).
 
 -spec random_between(Min :: non_neg_integer(), Max :: non_neg_integer()) -> non_neg_integer().
 random_between(Min, Max)
