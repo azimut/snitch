@@ -3,8 +3,12 @@
 
 init(Req, State) ->
     Headers = #{<<"content-type">> => <<"text/plain">>},
-    Domains = banker:domains(),
-    Res = cowboy_req:reply(200, Headers, join(<<"\n">>, Domains), Req),
+    Lines = lists:map(fun ({Domain, Timeout}) ->
+                              string:join([Domain, erlang:integer_to_list(Timeout)], " ")
+                      end,
+                      clock:state()),
+    Body = string:join(Lines, "\n"),
+    Res = cowboy_req:reply(200, Headers, binary:list_to_bin(Body), Req),
     {ok, Res, State}.
 
 %% https://gist.github.com/FNickRU/4daf8fb9afe5caaee7ebd35f398a8ac9
