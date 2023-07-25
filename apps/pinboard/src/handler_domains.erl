@@ -5,8 +5,7 @@ init(Req, State) ->
     Headers = #{<<"content-type">> => <<"text/plain">>},
     ClockState = clock:state(),
     Lines = lists:map(fun ({Domain, Timeout}) ->
-                              string:join([Domain,
-                                           erlang:integer_to_list(Timeout)], " ")
+                              string:join([Domain, erlang:integer_to_list(Timeout)], " ")
                       end,
                       ClockState),
     Body = string:join(Lines, "\n"),

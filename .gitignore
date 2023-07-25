@@ -1,3 +1,5 @@
+rebar.lock
+!/rebar.lock
 deps/
 .rebar3
 _*
@@ -19,6 +21,4 @@ _build
 rebar3.crashdump
 *~
 
-mytable
-centralbank
 *.app
