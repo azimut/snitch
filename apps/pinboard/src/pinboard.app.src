@@ -7,7 +7,7 @@
    [kernel,
     stdlib,
     cowboy,
-    banker
+    clock
    ]},
   {env,[]},
   {modules, []},
