@@ -12,6 +12,5 @@ Build
 TODO
 ----
 * Make multiple requests on first add of domain to get most of IP's from DNS
-* Load DNS servers from a file
 * Stats of how much is processing
 * Config file
