@@ -2,7 +2,7 @@
 -behaviour(gen_server).
 -export([start_link/0]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3, format_status/2]).
--export([add/1, del/1, get_state/0, now_gregorian/0]).
+-export([add/1, del/1, get_state/0]).
 
 -record(state, {domains = dict:new()}).
 
@@ -16,11 +16,6 @@ add(Domain) -> gen_server:cast(?MODULE, {add, sanitize(Domain)}).
 
 -spec del(Domain :: string()) -> ok.
 del(Domain) -> gen_server:cast(?MODULE, {del, sanitize(Domain)}).
-
--spec now_gregorian() -> non_neg_integer().
-now_gregorian() ->
-    calendar:datetime_to_gregorian_seconds(
-      calendar:local_time()).
 
 -spec get_state() -> [{string(), non_neg_integer()}].
 get_state() ->
