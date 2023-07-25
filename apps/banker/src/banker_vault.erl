@@ -2,7 +2,10 @@
 -behaviour(gen_server).
 -export([start_link/0]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3, format_status/2]).
--export([insert/5,insert_error/4]).
+-export([insert/5,
+         insert_error/4,
+         domains/0,
+         nameservers/0]).
 -define(SERVER, ?MODULE).
 -record(state, {conn}).
 -include("header.hrl").
@@ -16,6 +19,16 @@ insert(Domain, Ns, QType, RType, Result) ->
 insert_error(Domain, Type, NS, ECode) ->
     Error = #dns_error{domain = Domain, qtype = Type, ns = NS, rerror = ECode},
     gen_server:cast(?SERVER, {error, Error}).
+
+-spec nameservers() -> list(inet:ip_address()).
+nameservers() ->
+    {ok, NSs} = gen_server:call(?SERVER, nameservers),
+    NSs.
+
+-spec domains() -> list(string()).
+domains() ->
+    {ok, Domains} = gen_server:call(?SERVER, domains),
+    Domains.
 
 start_link() ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
@@ -58,7 +71,18 @@ handle_cast(_Request, State) ->
 terminate(_Reason, #state{conn=Conn}) ->
     epgsql:close(Conn).
 
+handle_call(domains, _From, #state{conn=Conn}=State) ->
+    SQL = "SELECT addr FROM domains",
+    {ok, _Columns, Rows} = epgsql:equery(Conn, SQL, []),
+    Domain = lists:map(fun ({X}) -> X end, Rows),
+    {reply, {ok, Domain}, State};
+handle_call(nameservers, _From, #state{conn=Conn}=State) ->
+    SQL = "SELECT ip FROM nameservers",
+    {ok, _Columns, Rows} = epgsql:equery(Conn, SQL, []),
+    IPs = lists:map(fun ({X}) -> X end, Rows),
+    {reply, {ok, IPs}, State};
 handle_call(_Request, _From, State) -> {reply, ok, State}.
+
 handle_info(_Info, State) -> {noreply, State}.
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
 format_status(_Opt, Status) -> Status.

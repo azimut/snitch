@@ -20,3 +20,17 @@ create table if not exists dns_error(
   unique(domain_name,qtype,rerror),
   primary key(id)
 );
+
+create table if not exists nameservers(
+  id serial not null,
+  ip inet not null,
+  unique(ip),
+  primary key(id)
+);
+
+create table if not exists domains(
+  id serial not null,
+  addr varchar(256) not null,
+  unique(addr),
+  primary key(id)
+);

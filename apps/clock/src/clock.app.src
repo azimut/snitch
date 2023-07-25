@@ -5,7 +5,8 @@
   {mod, {clock_app, []}},
   {applications,
    [kernel,
-    stdlib
+    stdlib,
+    sheriff
    ]},
   {env,[]},
   {modules, []},

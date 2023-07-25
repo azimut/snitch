@@ -8,8 +8,10 @@ start_link() ->
     supervisor:start_link({local, ?SERVER}, ?MODULE, []).
 
 init([]) ->
-    {ok, {#{strategy  => one_for_all,
+    {ok, {#{strategy  => one_for_one,
             intensity => 0,
             period    => 1},
-          [#{id        => banker,
-             start     => {banker_vault,start_link,[]}}]}}.
+          [#{id        => banker_vault,
+             start     => {banker_vault,start_link,[]}},
+           #{id        => banker_atm,
+             start     => {banker_atm,start_link,[]}}]}}.

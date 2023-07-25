@@ -1,8 +1,11 @@
 -module(banker).
+
 -export([insert/5,
          insert_error/4,
-         dns_server_get_random/0]).
--include("header.hrl").
+         nameservers/0,
+         domains/0,
+         random_nameserver/0
+        ]).
 
 -spec insert(string(), inet:ip_address(), inet_res:dns_rr_type(), inet_res:dns_rr_type(), string()) -> ok.
 insert(Domain, Ns, QType, RType, Result) ->
@@ -12,6 +15,12 @@ insert(Domain, Ns, QType, RType, Result) ->
 insert_error(Domain, Type, NS, ECode) ->
     banker_vault:insert_error(Domain, Type, NS, ECode).
 
--spec dns_server_get_random() -> inet:ip_address().
-dns_server_get_random() ->
-    banker_vault:dns_server_get_random().
+-spec random_nameserver() -> inet:ip_address().
+random_nameserver() ->
+    banker_atm:random_nameserver().
+
+-spec nameservers() -> list(inet:ip_address()).
+nameservers()       -> banker_atm:nameservers().
+
+-spec domains()     -> list(string()).
+domains()           -> banker_atm:domains().

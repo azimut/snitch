@@ -17,7 +17,7 @@ init([]) ->
     {ok, #state{}}.
 
 handle_cast({lookup, Domain}, State) ->
-    NS = mattress:random_dns_server(),
+    NS = banker:random_nameserver(),
     Timeout = 5 * 1000,
     Arguments = [self(),Domain, {NS,53}, Timeout],
     proc_lib:spawn(sheriff_revolver, shoot, Arguments),

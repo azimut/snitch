@@ -1,0 +1,17 @@
+{application, pinboard,
+ [{description, "An HTTP dashboard"},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {mod, {pinboard_app, []}},
+  {applications,
+   [kernel,
+    stdlib,
+    cowboy,
+    banker
+   ]},
+  {env,[]},
+  {modules, []},
+
+  {licenses, ["Apache-2.0"]},
+  {links, []}
+ ]}.
