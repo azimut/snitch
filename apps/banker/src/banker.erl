@@ -19,8 +19,8 @@ insert_error(Domain, Type, NS, ECode) ->
 random_nameserver() ->
     banker_atm:random_nameserver().
 
--spec nameservers() -> list(inet:ip_address()).
+-spec nameservers() -> [string()].
 nameservers()       -> banker_atm:nameservers().
 
--spec domains()     -> list(string()).
+-spec domains()     -> [string()].
 domains()           -> banker_atm:domains().

@@ -3,7 +3,10 @@
 -export([start/2, stop/1]).
 
 start(_StartType, _StartArgs) ->
-    Routes = [{'_', [{"/", handler_domains, []}]}],
+    Routes = [{'_', [{"/",            handler_root,        []},
+                     {"/domains",     handler_domains,     []},
+                     {"/nameservers", handler_nameservers, []}
+                    ]}],
     Dispatch = cowboy_router:compile(Routes),
     Name = pinboard_http_listener,
     Ports = [{port, 8080}],

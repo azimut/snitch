@@ -13,19 +13,19 @@
 -define(CACHE_TIMEOUT, 3600).
 -define(CACHE_STEP, 30).
 
--record(state, {timeout = ?CACHE_TIMEOUT :: integer(),
-                domains = [] :: list(string()),
-                nameservers = [] :: list(inet:ip_address())}).
+-record(state, {timeout     = ?CACHE_TIMEOUT :: integer(),
+                domains     = [] :: [string()],
+                nameservers = [] :: [inet:ip_address()]}).
 
--spec domains() -> list(string()).
+-spec domains() -> [string()].
 domains() ->
     {ok, Domains} = gen_server:call(?SERVER, domains),
     Domains.
 
--spec nameservers() -> list(inet:ip_address()).
+-spec nameservers() -> [string()].
 nameservers() ->
     {ok, Nameservers} = gen_server:call(?SERVER, nameservers),
-    Nameservers.
+    lists:map(fun inet:ntoa/1, Nameservers).
 
 -spec random_nameserver() -> inet:ip_address().
 random_nameserver() ->
