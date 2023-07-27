@@ -32,6 +32,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: snitch:latest
-          cache-from: type=gha
-          cache-to: type=gha
+          tags: ghcr.io/azimut/snitch/snitch:latest
