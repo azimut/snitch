@@ -10,12 +10,19 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    env:
+      OTP_VERSION: 25.1.2
+      REBAR_VERSION: 3.20.0
     steps:
       - uses: actions/checkout@v3
       - uses: erlef/setup-beam@v1
         with:
-          otp-version: 25.1.2
-          rebar3-version: 3.20.0
+          otp-version: "${{ env.OTP_VERSION }}"
+          rebar3-version: "${{ env.REBAR_VERSION }"
+      - uses: actions/cache@v2
+        with:
+          key: "${{ env.OTP_VERSION }}-${{ env.REBAR_VERSION }}"
+          path: ~/.cache/rebar3
       - run: rebar3 ct
       - run: rebar3 dialyzer
 
