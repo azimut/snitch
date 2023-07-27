@@ -1,6 +1,6 @@
 -module(banker_vault).
 -behaviour(gen_server).
--export([start_link/0]).
+-export([start_link/1]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3, format_status/2]).
 -export([insert/5,
          insert_error/4,
@@ -30,18 +30,14 @@ domains() ->
     {ok, Domains} = gen_server:call(?SERVER, domains),
     Domains.
 
-start_link() ->
-    gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+start_link(DBConfig) ->
+    gen_server:start_link({local, ?SERVER}, ?MODULE, [DBConfig], []).
 
-init([]) ->
+init([DBConfig]) ->
     process_flag(trap_exit, true),
     {ok, C} = epgsql:connect(
-                #{host             => "127.0.0.1",
-                  username         => "autoaim",
-                  password         => "zaq12wsx",
-                  database         => "binance",
-                  application_name => "snitch",
-                  timeout          => 4 * 1000}),
+                DBConfig#{application_name => "snitch",
+                          timeout          => 4 * 1000}),
     {ok, #state{conn=C}}.
 
 handle_cast({ok, #dns_data{}=D}, #state{conn=Conn}=State) ->
