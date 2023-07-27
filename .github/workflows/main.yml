@@ -17,6 +17,7 @@ jobs:
           otp-version: 25.1.2
           rebar3-version: 3.20.0
       - run: rebar3 ct
+      - run: rebar3 dialyzer
 
   docker:
     runs-on: ubuntu-latest
