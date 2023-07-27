@@ -7,3 +7,5 @@ VERSION
 README.org
 README.md
 Makefile
+Dockerfile
+_build
