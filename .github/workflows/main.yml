@@ -18,7 +18,7 @@ jobs:
       - uses: erlef/setup-beam@v1
         with:
           otp-version: "${{ env.OTP_VERSION }}"
-          rebar3-version: "${{ env.REBAR_VERSION }"
+          rebar3-version: "${{ env.REBAR_VERSION }}"
       - uses: actions/cache@v2
         with:
           key: "${{ env.OTP_VERSION }}-${{ env.REBAR_VERSION }}"
