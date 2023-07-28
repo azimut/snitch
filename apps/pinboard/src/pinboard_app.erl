@@ -3,9 +3,10 @@
 -export([start/2, stop/1]).
 
 start(_StartType, _StartArgs) ->
-    Routes = [{'_', [{"/",            handler_root,        []},
-                     {"/domains",     handler_domains,     []},
-                     {"/nameservers", handler_nameservers, []}
+    Routes = [{'_', [{"/",               handler_root,        []},
+                     {"/domains",        handler_domains,     []},
+                     {"/nameservers",    handler_nameservers, []},
+                     {"/domain/:domain", handler_domain,      []}
                     ]}],
     Dispatch = cowboy_router:compile(Routes),
     Name = pinboard_http_listener,

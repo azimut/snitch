@@ -5,7 +5,8 @@
 -export([insert/5,
          insert_error/4,
          domains/0,
-         nameservers/0]).
+         nameservers/0,
+         lookup/1]).
 -define(SERVER, ?MODULE).
 -record(state, {conn}).
 -include("header.hrl").
@@ -20,15 +21,21 @@ insert_error(Domain, Type, NS, ECode) ->
     Error = #dns_error{domain = Domain, qtype = Type, ns = NS, rerror = ECode},
     gen_server:cast(?SERVER, {error, Error}).
 
--spec nameservers() -> list(inet:ip_address()).
+-spec nameservers() -> [inet:ip_address()].
 nameservers() ->
     {ok, NSs} = gen_server:call(?SERVER, nameservers),
     NSs.
 
--spec domains() -> list(string()).
+-spec domains() -> [string()].
 domains() ->
     {ok, Domains} = gen_server:call(?SERVER, domains),
     Domains.
+
+%% TODO -spec lookup(Domain :: string()) -> [].
+lookup(Domain) ->
+    gen_server:call(?SERVER, {lookup, Domain}).
+
+%% ========================================
 
 start_link(DBConfig) ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [DBConfig], []).
@@ -67,14 +74,19 @@ handle_cast(_Request, State) ->
 terminate(_Reason, #state{conn=Conn}) ->
     epgsql:close(Conn).
 
+handle_call({lookup, Domain}, _From, #state{conn = Conn}=State) ->
+    SQL = "SELECT created, qtype, response FROM dns_data WHERE domain_name = $1"
+        ++"ORDER BY created DESC",
+    {ok, _Cols, Rows} = epgsql:equery(Conn, SQL, [Domain]),
+    {reply, Rows, State};
 handle_call(domains, _From, #state{conn=Conn}=State) ->
     SQL = "SELECT addr FROM domains",
-    {ok, _Columns, Rows} = epgsql:equery(Conn, SQL, []),
+    {ok, _Cols, Rows} = epgsql:equery(Conn, SQL, []),
     Domain = lists:map(fun ({X}) -> X end, Rows),
     {reply, {ok, Domain}, State};
 handle_call(nameservers, _From, #state{conn=Conn}=State) ->
     SQL = "SELECT ip FROM nameservers",
-    {ok, _Columns, Rows} = epgsql:equery(Conn, SQL, []),
+    {ok, _Cols, Rows} = epgsql:equery(Conn, SQL, []),
     IPs = lists:map(fun ({X}) -> X end, Rows),
     {reply, {ok, IPs}, State};
 handle_call(_Request, _From, State) -> {reply, ok, State}.
