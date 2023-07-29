@@ -2,5 +2,6 @@
  {banker, [{db_config, #{host     => "${DB_HOST}",
                          username => "${DB_USERNAME}",
                          password => "${DB_PASSWORD}",
-                         database => "${DB_DATABASE}"}}]}
+                         database => "${DB_DATABASE}"}}]},
+ {pinboard, [{port, ${PORT}}]}
 ].

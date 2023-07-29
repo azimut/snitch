@@ -10,7 +10,8 @@ start(_StartType, _StartArgs) ->
                     ]}],
     Dispatch = cowboy_router:compile(Routes),
     Name = pinboard_http_listener,
-    Ports = [{port, 8081}],
+    {ok, Port} = application:get_env(pinboard, port),
+    Ports = [{port, Port}],
     Env = #{env => #{dispatch => Dispatch}},
     {ok, _} = cowboy:start_clear(Name, Ports, Env),
     pinboard_sup:start_link().
