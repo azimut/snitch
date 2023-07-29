@@ -75,7 +75,7 @@ terminate(_Reason, #state{conn=Conn}) ->
     epgsql:close(Conn).
 
 handle_call({lookup, Domain}, _From, #state{conn = Conn}=State) ->
-    SQL = "SELECT created, qtype, response FROM dns_data WHERE domain_name = $1"
+    SQL = "SELECT created, qtype, response FROM dns_data WHERE domain_name = $1 "
         ++"ORDER BY created DESC",
     {ok, _Cols, Rows} = epgsql:equery(Conn, SQL, [Domain]),
     {reply, Rows, State};
