@@ -27,7 +27,7 @@ RUN --mount=type=bind,target=. \
     tar zxvf $REBAR_BASE_DIR/prod/rel/*/*.tar.gz -C /opt/rel
 
 
-FROM alpine:3.16 as runner
+FROM alpine:3.16.3 as runner
 WORKDIR /opt/snitch
 ENV COOKIE=snitch_cookie \
     RELX_OUT_FILE_PATH=/tmp
