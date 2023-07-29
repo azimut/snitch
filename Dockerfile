@@ -34,7 +34,7 @@ ENV COOKIE=snitch_cookie \
 EXPOSE 8081
 RUN --mount=type=cache,sharing=locked,target=/var/cache/apk \
     ln -vs /var/cache/apk /etc/apk/cache && \
-    apk add --update openssl ncurses
+    apk add --update openssl ncurses libstdc++ libgcc
 COPY --from=releaser /opt/rel .
 ENTRYPOINT ["/opt/snitch/bin/snitch"]
 CMD ["foreground"]
