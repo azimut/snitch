@@ -1,6 +1,6 @@
 -module(epgsql_pool_client).
 -include("header.hrl").
--behaviour(ecpool_worker).
+-behavihour(ecpool_worker).
 -export([connect/1, squery/1, equery/2]).
 
 connect(Opts) ->
