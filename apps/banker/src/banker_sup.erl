@@ -9,8 +9,8 @@ start_link(DBConfig) ->
 
 init([DBConfig]) ->
     {ok, {#{strategy  => one_for_one,
-            intensity => 0,
-            period    => 1},
+            intensity => 2,
+            period    => 10},
           [#{id        => banker_vault,
              start     => {banker_vault,start_link,[DBConfig]}},
            #{id        => banker_atm,
