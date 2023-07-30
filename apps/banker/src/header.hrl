@@ -1,3 +1,5 @@
+-define(POOL_NAME,epgsql_pool).
+
 -record(dns_data, {domain :: string(),
                    ns     :: inet:ip_address(),
                    qtype  :: inet_res:dns_rr_type(),

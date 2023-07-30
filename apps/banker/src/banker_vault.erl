@@ -8,7 +8,7 @@
          nameservers/0,
          lookup/1]).
 -define(SERVER, ?MODULE).
--record(state, {conn}).
+-record(state, {}).
 -include("header.hrl").
 
 -spec insert(string(), inet:ip_address(), inet_res:dns_rr_type(), inet_res:dns_rr_type(), string()) -> ok.
@@ -42,12 +42,10 @@ start_link(DBConfig) ->
 
 init([DBConfig]) ->
     process_flag(trap_exit, true),
-    {ok, C} = epgsql:connect(
-                DBConfig#{application_name => "snitch",
-                          timeout          => 4 * 1000}),
-    {ok, #state{conn=C}}.
+    ecpool:start_pool(?POOL_NAME, epgsql_pool_client, DBConfig),
+    {ok, #state{}}.
 
-handle_cast({ok, #dns_data{}=D}, #state{conn=Conn}=State) ->
+handle_cast({ok, #dns_data{}=D}, State) ->
     SQL = "INSERT INTO dns_data (domain_name,dns,qtype,rtype,response)" ++
         "  VALUES ($1,$2,$3,$4,$5)" ++
         "  ON CONFLICT DO NOTHING",
@@ -56,9 +54,9 @@ handle_cast({ok, #dns_data{}=D}, #state{conn=Conn}=State) ->
                   erlang:atom_to_list(D#dns_data.qtype),
                   erlang:atom_to_list(D#dns_data.rtype),
                   D#dns_data.result],
-    {ok, _} = epgsql:equery(Conn, SQL, Parameters),
+    {ok, _} = epgsql_pool_client:equery(SQL, Parameters),
     {noreply, State};
-handle_cast({error, #dns_error{}=E}, #state{conn=Conn}=State) ->
+handle_cast({error, #dns_error{}=E}, State) ->
     SQL = "INSERT INTO dns_error (domain_name,qtype,rerror,dns)" ++
         "  VALUES ($1,$2,$3,$4)" ++
         "  ON CONFLICT DO NOTHING",
@@ -66,27 +64,27 @@ handle_cast({error, #dns_error{}=E}, #state{conn=Conn}=State) ->
                   erlang:atom_to_list(E#dns_error.qtype),
                   erlang:atom_to_list(E#dns_error.rerror),
                   E#dns_error.ns],
-    {ok, _} = epgsql:equery(Conn, SQL, Parameters),
+    {ok, _} = epgsql_pool_client:equery(SQL, Parameters),
     {noreply, State};
 handle_cast(_Request, State) ->
     {noreply, State}.
 
-terminate(_Reason, #state{conn=Conn}) ->
-    epgsql:close(Conn).
+%% TODO: terminate pool
+terminate(_Reason, _State) -> ok.
 
-handle_call({lookup, Domain}, _From, #state{conn = Conn}=State) ->
+handle_call({lookup, Domain}, _From, State) ->
     SQL = "SELECT created, qtype, response FROM dns_data WHERE domain_name = $1" ++
         " ORDER BY created DESC",
-    {ok, _Cols, Rows} = epgsql:equery(Conn, SQL, [Domain]),
+    {ok, _Cols, Rows} = epgsql_pool_client:equery(SQL, [Domain]),
     {reply, Rows, State};
-handle_call(domains, _From, #state{conn=Conn}=State) ->
+handle_call(domains, _From, State) ->
     SQL = "SELECT addr FROM domains",
-    {ok, _Cols, Rows} = epgsql:equery(Conn, SQL, []),
+    {ok, _Cols, Rows} = epgsql_pool_client:equery(SQL, []),
     Domain = lists:map(fun ({X}) -> X end, Rows),
     {reply, {ok, Domain}, State};
-handle_call(nameservers, _From, #state{conn=Conn}=State) ->
+handle_call(nameservers, _From, State) ->
     SQL = "SELECT ip FROM nameservers",
-    {ok, _Cols, Rows} = epgsql:equery(Conn, SQL, []),
+    {ok, _Cols, Rows} = epgsql_pool_client:equery(SQL, []),
     IPs = lists:map(fun ({X}) -> X end, Rows),
     {reply, {ok, IPs}, State};
 handle_call(_Request, _From, State) -> {reply, ok, State}.
