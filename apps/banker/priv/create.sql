@@ -24,6 +24,7 @@ create table if not exists dns_error(
 create table if not exists nameservers(
   id serial not null,
   ip inet not null,
+  timeouts integer default 0
   unique(ip),
   primary key(id)
 );

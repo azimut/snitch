@@ -56,6 +56,18 @@ handle_cast({ok, #dns_data{}=D}, State) ->
                   D#dns_data.result],
     {ok, _} = epgsql_pool_client:equery(SQL, Parameters),
     {noreply, State};
+handle_cast({error, #dns_error{rerror = timeout}=E}, State) ->
+    TSQL = "UPDATE nameservers SET timeouts = timeouts + 1 WHERE ip = $1",
+    {ok, _} = epgsql_pool_client:equery(TSQL, [E#dns_error.ns]),
+    SQL = "INSERT INTO dns_error (domain_name,qtype,rerror,dns)" ++
+        "  VALUES ($1,$2,$3,$4)" ++
+        "  ON CONFLICT DO NOTHING",
+    Parameters = [E#dns_error.domain,
+                  erlang:atom_to_list(E#dns_error.qtype),
+                  erlang:atom_to_list(E#dns_error.rerror),
+                  E#dns_error.ns],
+    {ok, _} = epgsql_pool_client:equery(SQL, Parameters),
+    {noreply, State};
 handle_cast({error, #dns_error{}=E}, State) ->
     SQL = "INSERT INTO dns_error (domain_name,qtype,rerror,dns)" ++
         "  VALUES ($1,$2,$3,$4)" ++
@@ -83,7 +95,7 @@ handle_call(domains, _From, State) ->
     Domain = lists:map(fun ({X}) -> X end, Rows),
     {reply, {ok, Domain}, State};
 handle_call(nameservers, _From, State) ->
-    SQL = "SELECT ip FROM nameservers",
+    SQL = "SELECT ip FROM nameservers WHERE timeouts = 0",
     {ok, _Cols, Rows} = epgsql_pool_client:equery(SQL, []),
     IPs = lists:map(fun ({X}) -> X end, Rows),
     {reply, {ok, IPs}, State};
