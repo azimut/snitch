@@ -51,7 +51,10 @@ handle_info(_Info, State) ->
     {noreply, State}.
 
 handle_call(get_state, _From, #state{domains = Domains}=State) ->
-    {reply, {ok, dict:to_list(Domains)}, State};
+    Ds = dict:to_list(Domains),
+    SortedDs = lists:sort(fun ({_,T1}, {_,T2}) -> T1 < T2 end,
+                          Ds),
+    {reply, {ok, SortedDs}, State};
 handle_call(_Request, _From, State) -> {reply, ok, State}.
 terminate(_Reason, _State) -> ok.
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
