@@ -7,7 +7,8 @@
          terminate/2, code_change/3, format_status/2]).
 -export([random_nameserver/0,
          domains/0,
-         nameservers/0]).
+         nameservers/0,
+         add/1]).
 
 -define(SERVER, ?MODULE).
 -define(CACHE_TIMEOUT, 3600).
@@ -32,6 +33,9 @@ random_nameserver() ->
     {ok, NS} = gen_server:call(?SERVER, random_nameserver),
     NS.
 
+-spec add(Domain :: string()) -> ok.
+add(Domain) -> gen_server:cast(?MODULE, {add, Domain}).
+
 %%-------------------------------------
 
 start_link() ->
@@ -52,6 +56,15 @@ handle_call(random_nameserver, _From, #state{nameservers=Nameservers}=State) ->
     {reply, {ok, random_elt(Nameservers)}, State};
 handle_call(_Request, _From, State) -> {reply, ok, State}.
 
+handle_cast({add, RawDomain}, #state{domains = Domains}=State) ->
+    Domain = sanitize(RawDomain),
+    case lists:member(Domain, Domains) of
+        false ->
+            banker_vault:add(Domain),
+            {noreply, State#state{domains = [Domain|Domains]}};
+        true ->
+            {noreply, State}
+    end;
 handle_cast(refresh_cache, State) ->
     NSs = banker_vault:nameservers(),
     Domains = banker_vault:domains(),
@@ -85,3 +98,10 @@ schedule(Msg, Seconds) -> erlang:send_after(Seconds * 1000, erlang:self(), Msg).
 
 -spec tick() -> reference().
 tick() -> schedule(tick, ?CACHE_STEP).
+
+-spec sanitize(string()) -> string().
+sanitize(Domain) ->
+    Tmp1 = string:lowercase(Domain),
+    Tmp2 = string:split(Tmp1, ".", all),
+    Tmp3 = lists:filter(fun (X) -> length(X) > 0  end, Tmp2),
+    string:join(Tmp3, ".").

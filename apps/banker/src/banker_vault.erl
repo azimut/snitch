@@ -6,7 +6,8 @@
          insert_error/4,
          domains/0,
          nameservers/0,
-         lookup/1]).
+         lookup/1,
+         add/1]).
 -define(SERVER, ?MODULE).
 -record(state, {}).
 -include("header.hrl").
@@ -35,6 +36,9 @@ domains() ->
 lookup(Domain) ->
     gen_server:call(?SERVER, {lookup, Domain}).
 
+-spec add(Domain :: string()) -> ok.
+add(Domain) -> gen_server:cast(?MODULE, {add, Domain}).
+
 %% ========================================
 
 start_link(DBConfig) ->
@@ -45,6 +49,10 @@ init([DBConfig]) ->
     ecpool:start_pool(?POOL_NAME, epgsql_pool_client, DBConfig),
     {ok, #state{}}.
 
+handle_cast({add, Domain}, State) ->
+    SQL = "INSERT INTO domains (addr) VALUES ($1) ON CONFLICT DO NOTHING",
+    {ok, _} = epgsql_pool_client:equery(SQL, [Domain]),
+    {noreply, State};
 handle_cast({ok, #dns_data{}=D}, State) ->
     SQL = "INSERT INTO dns_data (domain_name,dns,qtype,rtype,response)" ++
         "  VALUES ($1,$2,$3,$4,$5)" ++
@@ -56,7 +64,6 @@ handle_cast({ok, #dns_data{}=D}, State) ->
                   D#dns_data.result],
     {ok, _} = epgsql_pool_client:equery(SQL, Parameters),
     {noreply, State};
-
 handle_cast({error, #dns_error{rerror = ehostunreach, ns = NS}}, State) ->
     TSQL = "UPDATE nameservers SET enabled = false WHERE ip = $1",
     {ok, _} = epgsql_pool_client:equery(TSQL, [NS]),
@@ -97,7 +104,7 @@ handle_call({lookup, Domain}, _From, State) ->
 handle_call(domains, _From, State) ->
     SQL = "SELECT addr FROM domains",
     {ok, _Cols, Rows} = epgsql_pool_client:equery(SQL, []),
-    Domain = lists:map(fun ({X}) -> X end, Rows),
+    Domain = lists:map(fun ({X}) -> binary:bin_to_list(X) end, Rows),
     {reply, {ok, Domain}, State};
 handle_call(nameservers, _From, State) ->
     SQL = "SELECT ip FROM nameservers WHERE timeouts = 0 AND enabled",

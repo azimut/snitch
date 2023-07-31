@@ -2,7 +2,7 @@
 -behaviour(gen_server).
 -export([start_link/0]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3, format_status/2]).
--export([add/1, del/1, get_state/0]).
+-export([get_state/0]).
 
 -record(state, {domains = dict:new()}).
 
@@ -10,12 +10,6 @@
 -define(TICK_SECONDS, 10).
 -define(TICK_SECONDS_MIN, 60*5).
 -define(TICK_SECONDS_MAX, 60*60*8).
-
--spec add(Domain :: string()) -> ok.
-add(Domain) -> gen_server:cast(?MODULE, {add, sanitize(Domain)}).
-
--spec del(Domain :: string()) -> ok.
-del(Domain) -> gen_server:cast(?MODULE, {del, sanitize(Domain)}).
 
 -spec get_state() -> [{string(), non_neg_integer()}].
 get_state() ->
@@ -52,8 +46,7 @@ handle_info(_Info, State) ->
 
 handle_call(get_state, _From, #state{domains = Domains}=State) ->
     Ds = dict:to_list(Domains),
-    SortedDs = lists:sort(fun ({_,T1}, {_,T2}) -> T1 < T2 end,
-                          Ds),
+    SortedDs = lists:sort(fun ({_,T1}, {_,T2}) -> T1 < T2 end, Ds),
     {reply, {ok, SortedDs}, State};
 handle_call(_Request, _From, State) -> {reply, ok, State}.
 terminate(_Reason, _State) -> ok.
@@ -76,15 +69,6 @@ tick_domain(Domain, Timeout) ->
                  next_timeout()
     end.
 
--spec sanitize(string()|bitstring()) -> string().
-sanitize(Domain) when is_bitstring(Domain) ->
-    sanitize(binary:bin_to_list(Domain));
-sanitize(Domain) ->
-    Tmp1 = string:lowercase(Domain),
-    Tmp2 = string:split(Tmp1, ".", all),
-    Tmp3 = lists:filter(fun (X) -> length(X) > 0  end, Tmp2),
-    string:join(Tmp3, ".").
-
 -spec next_timeout() -> non_neg_integer().
 next_timeout() -> random_between(?TICK_SECONDS_MIN, ?TICK_SECONDS_MAX).
 
@@ -92,3 +76,6 @@ next_timeout() -> random_between(?TICK_SECONDS_MIN, ?TICK_SECONDS_MAX).
 random_between(Min, Max)
   when Max > Min, Max > 0, Min > 0 ->
     rand:uniform(Max - Min + 1) + Min.
+
+-spec add(Domain :: string()) -> ok.
+add(Domain) -> gen_server:cast(?MODULE, {add, Domain}).
