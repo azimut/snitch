@@ -9,7 +9,7 @@
 -define(SERVER, ?MODULE).
 -define(TICK_SECONDS, 10).
 -define(TICK_SECONDS_MIN, 60*5).
--define(TICK_SECONDS_MAX, 60*15).
+-define(TICK_SECONDS_MAX, 60*60*8).
 
 -spec add(Domain :: string()) -> ok.
 add(Domain) -> gen_server:cast(?MODULE, {add, sanitize(Domain)}).
