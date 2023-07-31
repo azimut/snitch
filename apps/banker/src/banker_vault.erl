@@ -56,6 +56,11 @@ handle_cast({ok, #dns_data{}=D}, State) ->
                   D#dns_data.result],
     {ok, _} = epgsql_pool_client:equery(SQL, Parameters),
     {noreply, State};
+
+handle_cast({error, #dns_error{rerror = ehostunreach, ns = NS}}, State) ->
+    TSQL = "UPDATE nameservers SET enabled = false WHERE ip = $1",
+    {ok, _} = epgsql_pool_client:equery(TSQL, [NS]),
+    {noreply, State};
 handle_cast({error, #dns_error{rerror = timeout}=E}, State) ->
     TSQL = "UPDATE nameservers SET timeouts = timeouts + 1 WHERE ip = $1",
     {ok, _} = epgsql_pool_client:equery(TSQL, [E#dns_error.ns]),
@@ -95,7 +100,7 @@ handle_call(domains, _From, State) ->
     Domain = lists:map(fun ({X}) -> X end, Rows),
     {reply, {ok, Domain}, State};
 handle_call(nameservers, _From, State) ->
-    SQL = "SELECT ip FROM nameservers WHERE timeouts = 0",
+    SQL = "SELECT ip FROM nameservers WHERE timeouts = 0 AND enabled",
     {ok, _Cols, Rows} = epgsql_pool_client:equery(SQL, []),
     IPs = lists:map(fun ({X}) -> X end, Rows),
     {reply, {ok, IPs}, State};
