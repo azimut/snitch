@@ -3,7 +3,10 @@
 -include("header.hrl").
 -export([shoot/4,lookup/4,answers/1]).
 
--spec shoot(pid(), string(), inet_res:nameserver(), non_neg_integer())
+-spec shoot(From    :: pid(),
+            Domain  :: string(),
+            NS      :: inet_res:nameserver(),
+            Timeout :: non_neg_integer())
            -> {ok, #results{}} | {error, #error{}}.
 shoot(From, Domain, NS, Timeout) ->
     case lookup(Domain, cname, NS, Timeout) of
@@ -14,15 +17,23 @@ shoot(From, Domain, NS, Timeout) ->
             From ! lookup(Domain,soa,NS,Timeout),
             From ! lookup(Domain,ns,NS,Timeout),
             From ! lookup(Domain,txt,NS,Timeout);
-        Response -> From ! Response
+        Response ->
+            From ! Response
     end.
 
--spec lookup(string(), inet_res:dns_rr_type(), inet_res:nameserver(), non_neg_integer())
+-spec lookup(Domain  :: string(),
+             Type    :: inet_res:dns_rr_type(),
+             NS      :: inet_res:nameserver(),
+             Timeout :: non_neg_integer())
             -> {ok, #results{}} | {error, #error{}}.
 lookup(Domain, Type, {NSAddress,_}=NS, Timeout) ->
     case inet_res:nnslookup(Domain, in, Type, [NS], Timeout) of
         {error, Error} ->
-            logger:notice("error : ~p for ~s/~p ~n",[Error, Domain, Type]),
+            logger:notice("error : ~p for ~s/~s with ~s~n",
+                          [Error,
+                           Domain,
+                           string:to_upper(erlang:atom_to_list(Type)),
+                           inet:ntoa(NSAddress)]),
             {error, #error{qtype  = Type,
                            server = NSAddress,
                            domain = Domain,
@@ -40,7 +51,7 @@ lookup(Domain, Type, {NSAddress,_}=NS, Timeout) ->
                           answers = answers(Record#dns_rec.anlist)}}
     end.
 
--spec answers(list(#dns_rr{})|#dns_rr{}) -> list(string()).
+-spec answers([#dns_rr{}]|#dns_rr{}) -> [string()].
 answers([])                         -> [];
 answers([X=#dns_rr{type = soa}|Xs]) ->  answers(X)  ++ answers(Xs);
 answers([X|Xs])                     -> [answers(X)] ++ answers(Xs);

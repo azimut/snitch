@@ -68,7 +68,7 @@ handle_call(domains, _From, #state{domains = Domains}=State) ->
     {reply, {ok, Domains}, State};
 handle_call(nameservers, _From, #state{nameservers = Nameservers}=State) ->
     {reply, {ok, Nameservers}, State};
-handle_call(random_nameserver, _From, #state{nameservers=Nameservers}=State) ->
+handle_call(random_nameserver, _From, #state{nameservers = Nameservers}=State) ->
     {reply, {ok, random_elt(Nameservers)}, State};
 handle_call(_Request, _From, State) -> {reply, ok, State}.
 
