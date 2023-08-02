@@ -4,7 +4,7 @@
 init(Req, State) ->
     Headers = #{<<"content-type">> => <<"text/plain">>},
     Body = io_lib:format("/domains: ~p~n/nameservers: ~p~n",
-                         [erlang:length(banker:domains()),
-                          erlang:length(banker:nameservers())]),
+                         [banker:count_domains(),
+                          banker:count_nameservers()]),
     Res = cowboy_req:reply(200, Headers, Body, Req),
     {ok, Res, State}.
