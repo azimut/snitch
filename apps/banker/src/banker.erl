@@ -2,8 +2,8 @@
 
 -export([insert/5,
          insert_error/4,
-         nameservers/0,
-         domains/0,
+         nameservers/0, count_nameservers/0,
+         domains/0, count_domains/0,
          random_nameserver/0,
          lookup/1,
          add/1
@@ -26,6 +26,12 @@ nameservers()       -> banker_atm:nameservers().
 
 -spec domains()     -> [string()].
 domains()           -> banker_atm:domains().
+
+-spec count_nameservers() -> non_neg_integer().
+count_nameservers() -> banker_atm:count_nameservers().
+
+-spec count_domains() -> non_neg_integer().
+count_domains() -> banker_atm:count_domains().
 
 %% TODO -spec lookup(Domain :: string()) -> [].
 lookup(Domain) -> banker_vault:lookup(Domain).

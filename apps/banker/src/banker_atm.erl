@@ -6,8 +6,8 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3, format_status/2]).
 -export([random_nameserver/0,
-         domains/0,
-         nameservers/0,
+         domains/0, count_domains/0,
+         nameservers/0, count_nameservers/0,
          add/1]).
 
 -define(SERVER, ?MODULE).
@@ -23,10 +23,20 @@ domains() ->
     {ok, Domains} = gen_server:call(?SERVER, domains),
     Domains.
 
+-spec count_domains() -> non_neg_integer().
+count_domains() ->
+    {ok, Count} = gen_server:call(?SERVER, count_domains),
+    Count.
+
 -spec nameservers() -> [string()].
 nameservers() ->
     {ok, Nameservers} = gen_server:call(?SERVER, nameservers),
     lists:map(fun inet:ntoa/1, Nameservers).
+
+-spec count_nameservers() -> non_neg_integer().
+count_nameservers() ->
+    {ok, Count} = gen_server:call(?SERVER, count_nameservers),
+    Count.
 
 -spec random_nameserver() -> inet:ip_address().
 random_nameserver() ->
@@ -48,6 +58,12 @@ init([]) ->
     NSs = banker_vault:nameservers(),
     {ok, #state{domains = Domains, nameservers = NSs, timeout = ?CACHE_TIMEOUT}}.
 
+handle_call(count_domains, _From, #state{domains = Domains}=State) ->
+    Count = erlang:length(Domains),
+    {reply, {ok, Count}, State};
+handle_call(count_nameservers, _From, #state{nameservers = Nameservers}=State) ->
+    Count = erlang:length(Nameservers),
+    {reply, {ok, Count}, State};
 handle_call(domains, _From, #state{domains = Domains}=State) ->
     {reply, {ok, Domains}, State};
 handle_call(nameservers, _From, #state{nameservers = Nameservers}=State) ->
