@@ -24,9 +24,10 @@ handle_cast({lookup, Domain}, State) ->
     {noreply, State};
 handle_cast(_Request, State) -> {noreply, State}.
 
-handle_info({ok, #results{qtype=cname,rtype=cname,domain=Domain,server=NS,answers=Answers}}, State) ->
+handle_info({ok, #results{qtype=QType,rtype=RType,domain=Domain,server=NS,answers=Answers}}, State)
+  when RType == cname; RType == mx ->
     lists:foreach(fun (Answer) ->
-                          banker:insert(Domain, NS, cname, cname, Answer),
+                          banker:insert(Domain, NS, QType, RType, Answer),
                           banker:add(Answer)
                   end,
                   Answers),
