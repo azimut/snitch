@@ -90,7 +90,7 @@ handle_cast({error, #dns_error{rerror = timeout}=E}, State) ->
     {noreply, State};
 handle_cast({error, #dns_error{}=E}, State) ->
     SQL = "INSERT INTO dns_error (domain_name,qtype,rerror,dns)" ++
-        "  VALUES ($1,$2,$3,$4)" ++
+        "       VALUES ($1,$2,$3,$4)" ++
         "  ON CONFLICT DO NOTHING",
     Parameters = [E#dns_error.domain,
                   erlang:atom_to_list(E#dns_error.qtype),
@@ -122,7 +122,7 @@ handle_call({latest, Limit}, _From, State) ->
 handle_call({lookup, Domain}, _From, State) ->
     SQL = "SELECT created, qtype, response" ++
         "    FROM dns_data" ++
-        "   WHERE domain_name = $1" ++
+        "   WHERE domain_name = $1 " ++
         "ORDER BY created DESC",
     {ok, _Cols, Rows} = epgsql_pool_client:equery(SQL, [Domain]),
     {reply, Rows, State};
