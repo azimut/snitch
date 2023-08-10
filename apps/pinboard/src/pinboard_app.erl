@@ -6,7 +6,8 @@ start(_StartType, _StartArgs) ->
     Routes = [{'_', [{"/",               handler_root,        []},
                      {"/domains",        handler_domains,     []},
                      {"/nameservers",    handler_nameservers, []},
-                     {"/domain/:domain", handler_domain,      []}
+                     {"/domain/:domain", handler_domain,      []},
+                     {"/latest",         handler_latest,      []}
                     ]}],
     Dispatch = cowboy_router:compile(Routes),
     Name = pinboard_http_listener,

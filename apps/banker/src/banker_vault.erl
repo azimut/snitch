@@ -7,7 +7,9 @@
          domains/0,
          nameservers/0,
          lookup/1,
-         add/1]).
+         add/1,
+         latest/1
+        ]).
 -define(SERVER, ?MODULE).
 -record(state, {}).
 -include("header.hrl").
@@ -38,6 +40,12 @@ lookup(Domain) ->
 
 -spec add(Domain :: string()) -> ok.
 add(Domain) -> gen_server:cast(?MODULE, {add, Domain}).
+
+-spec latest(Limit :: non_neg_integer())
+            -> [{any(), string(), string(), string()}].
+latest(Limit) ->
+    {ok, Rows} = gen_server:call(?MODULE, {latest, Limit}),
+    Rows.
 
 %% ========================================
 
@@ -96,9 +104,26 @@ handle_cast(_Request, State) ->
 %% TODO: terminate pool
 terminate(_Reason, _State) -> ok.
 
+handle_call({latest, Limit}, _From, State) ->
+    SQL = "SELECT created, domain_name, rtype, response" ++
+        "    FROM dns_data" ++
+        "   WHERE rtype=qtype " ++
+        "ORDER BY created DESC" ++
+        "   LIMIT $1",
+    {ok, _Cols, Rows} = epgsql_pool_client:equery(SQL, [Limit]),
+    Results = lists:map(fun ({Created, Domain, Type, Response}) ->
+                                {Created,
+                                 erlang:binary_to_list(Domain),
+                                 erlang:binary_to_list(Type),
+                                 erlang:binary_to_list(Response)}
+                        end,
+                        Rows),
+    {reply, {ok, Results}, State};
 handle_call({lookup, Domain}, _From, State) ->
-    SQL = "SELECT created, qtype, response FROM dns_data WHERE domain_name = $1" ++
-        " ORDER BY created DESC",
+    SQL = "SELECT created, qtype, response" ++
+        "    FROM dns_data" ++
+        "   WHERE domain_name = $1" ++
+        "ORDER BY created DESC",
     {ok, _Cols, Rows} = epgsql_pool_client:equery(SQL, [Domain]),
     {reply, Rows, State};
 handle_call(domains, _From, State) ->
