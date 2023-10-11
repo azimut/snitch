@@ -59,7 +59,7 @@ init([DBConfig]) ->
 
 handle_cast({add, Domain}, State) ->
     SQL = "INSERT INTO domains (addr) VALUES ($1) ON CONFLICT DO NOTHING",
-    {ok, _, _, _} = epgsql_pool_client:equery(SQL, [Domain]),
+    {ok, _} = epgsql_pool_client:equery(SQL, [Domain]),
     {noreply, State};
 handle_cast({ok, #dns_data{}=D}, State) ->
     SQL = "INSERT INTO dns_data (domain_name,dns,qtype,rtype,response)" ++
@@ -70,7 +70,7 @@ handle_cast({ok, #dns_data{}=D}, State) ->
                   erlang:atom_to_list(D#dns_data.qtype),
                   erlang:atom_to_list(D#dns_data.rtype),
                   D#dns_data.result],
-    {ok, _, _, _} = epgsql_pool_client:equery(SQL, Parameters),
+    {ok, _} = epgsql_pool_client:equery(SQL, Parameters),
     {noreply, State};
 handle_cast({error, #dns_error{rerror = ehostunreach, ns = NS}}, State) ->
     TSQL = "UPDATE nameservers SET enabled = false WHERE ip = $1",
@@ -86,7 +86,7 @@ handle_cast({error, #dns_error{rerror = timeout}=E}, State) ->
                   erlang:atom_to_list(E#dns_error.qtype),
                   erlang:atom_to_list(E#dns_error.rerror),
                   E#dns_error.ns],
-    {ok, _, _, _} = epgsql_pool_client:equery(SQL, Parameters),
+    {ok, _} = epgsql_pool_client:equery(SQL, Parameters),
     {noreply, State};
 handle_cast({error, #dns_error{}=E}, State) ->
     SQL = "INSERT INTO dns_error (domain_name,qtype,rerror,dns)" ++
@@ -96,7 +96,7 @@ handle_cast({error, #dns_error{}=E}, State) ->
                   erlang:atom_to_list(E#dns_error.qtype),
                   erlang:atom_to_list(E#dns_error.rerror),
                   E#dns_error.ns],
-    {ok, _, _, _} = epgsql_pool_client:equery(SQL, Parameters),
+    {ok, _} = epgsql_pool_client:equery(SQL, Parameters),
     {noreply, State};
 handle_cast(_Request, State) ->
     {noreply, State}.
