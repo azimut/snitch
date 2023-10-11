@@ -12,6 +12,7 @@ start(_StartType, _StartArgs) ->
     Dispatch = cowboy_router:compile(Routes),
     Name = pinboard_http_listener,
     {ok, Port} = application:get_env(pinboard, port),
+    logger:notice("Listening at http://127.0.0.1:~p~n", [Port]),
     Ports = [{port, Port}],
     Env = #{env => #{dispatch => Dispatch}},
     {ok, _} = cowboy:start_clear(Name, Ports, Env),
