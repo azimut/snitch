@@ -7,6 +7,7 @@ connect(Opts) ->
     Host = proplists:get_value(host, Opts),
     Username = proplists:get_value(username, Opts),
     Password = proplists:get_value(password, Opts),
+    logger:notice("Connecting to database at ~s...~n", [Host]),
     epgsql:connect(Host, Username, Password, Opts).
 
 squery(Sql) ->
