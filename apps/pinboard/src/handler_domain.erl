@@ -2,15 +2,17 @@
 -export([init/2]).
 
 init(Req, State) ->
-    Headers = #{<<"content-type">> => <<"text/plain">>},
+    Headers = #{<<"content-type">> => <<"application/json">>},
     Domain = cowboy_req:binding(domain, Req),
     Rows = banker:lookup(Domain),
-    Body = format(Rows),
+    Body = json_format(Domain, Rows),
     Res = cowboy_req:reply(200, Headers, Body, Req),
     {ok, Res, State}.
 
-format([])   -> "No result.";
-format(Rows) -> lists:foldl(fun row_folder/2, "", Rows).
-
-row_folder({_Date, Type, Value}, Acc) ->
-    Acc ++ io_lib:format("~s ~s~n", [Type, Value]).
+json_format(Domain, Rows)
+  when erlang:is_list(Rows) ->
+    Records = lists:map(fun ({Date,Type,Value})
+                            -> #{date => Date, type => Type, value => Value}
+                        end,
+                        Rows),
+    jsone:encode(#{domain => Domain, records => Records}).

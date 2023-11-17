@@ -7,15 +7,16 @@ start(_StartType, _StartArgs) ->
                      {"/domains",         handler_domains,     []},
                      {"/domains/:domain", handler_domain,      []},
                      {"/nameservers",     handler_nameservers, []},
-                     {"/latest",          handler_latest,      []}
+                     {"/events",          handler_events,      []}
                     ]}],
     Dispatch = cowboy_router:compile(Routes),
-    Name = pinboard_http_listener,
     {ok, Port} = application:get_env(pinboard, port),
+    {ok, _} = cowboy:start_clear(
+                pinboard_http_listener,
+                [{port, Port}],
+                #{env => #{dispatch => Dispatch}}
+               ),
     logger:notice("Listening at http://127.0.0.1:~p~n", [Port]),
-    Ports = [{port, Port}],
-    Env = #{env => #{dispatch => Dispatch}},
-    {ok, _} = cowboy:start_clear(Name, Ports, Env),
     pinboard_sup:start_link().
 
 stop(_State) ->
