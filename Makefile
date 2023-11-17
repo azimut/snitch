@@ -1,12 +1,12 @@
 ERLS = $(wildcard apps/*/src/*.erl)
 HRLS = $(wildcard apps/*/src/*.hrl)
 
-_build/default/rel/snitch/bin/snitch: $(ERL) $(HRLS)
-	rebar3 release
+_build/prod/rel/snitch/bin/snitch: $(ERLS) $(HRLS)
+	rebar3 as prod release
 
 .PHONY: run
-run: _build/default/rel/snitch/bin/snitch
-	_build/default/rel/snitch/bin/snitch foreground
+run: _build/prod/rel/snitch/bin/snitch
+	_build/prod/rel/snitch/bin/snitch foreground
 
 .PHONY: clean
 clean:
