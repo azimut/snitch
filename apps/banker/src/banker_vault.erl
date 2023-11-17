@@ -8,7 +8,8 @@
          nameservers/0,
          lookup/1,
          add/1,
-         latest/1
+         events/1,
+         count_events/0
         ]).
 -define(SERVER, ?MODULE).
 -record(state, {}).
@@ -41,11 +42,16 @@ lookup(Domain) ->
 -spec add(Domain :: string()) -> ok.
 add(Domain) -> gen_server:cast(?MODULE, {add, Domain}).
 
--spec latest(Limit :: non_neg_integer())
+-spec events(Limit :: non_neg_integer())
             -> [{any(), string(), string(), string()}].
-latest(Limit) ->
-    {ok, Rows} = gen_server:call(?MODULE, {latest, Limit}),
+events(Limit) ->
+    {ok, Rows} = gen_server:call(?MODULE, {events, Limit}),
     Rows.
+
+-spec count_events() -> non_neg_integer().
+count_events() ->
+    {ok, Count} = gen_server:call(?MODULE, count_events),
+    Count.
 
 %% ========================================
 
@@ -104,7 +110,14 @@ handle_cast(_Request, State) ->
 %% TODO: terminate pool
 terminate(_Reason, _State) -> ok.
 
-handle_call({latest, Limit}, _From, State) ->
+handle_call(count_events, _From, State) ->
+    SQL = "SELECT COUNT(*)
+             FROM dns_data
+        WHERE rtype=qtype",
+    {ok, _Cols, [{RawCount}]} = epgsql_pool_client:squery(SQL),
+    {Count, <<>>} = string:to_integer(RawCount),
+    {reply, {ok, Count}, State};
+handle_call({events, Limit}, _From, State) ->
     SQL = "SELECT created, domain_name, rtype, response" ++
         "    FROM dns_data" ++
         "   WHERE rtype=qtype " ++

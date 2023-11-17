@@ -7,7 +7,7 @@
          random_nameserver/0,
          lookup/1,
          add/1,
-         latest/1
+         events/1, count_events/0
         ]).
 
 -spec insert(string(), inet:ip_address(), inet_res:dns_rr_type(), inet_res:dns_rr_type(), string()) -> ok.
@@ -40,5 +40,8 @@ lookup(Domain) -> banker_vault:lookup(Domain).
 -spec add(Domain :: string()) -> ok.
 add(Domain) -> banker_atm:add(Domain).
 
--spec latest(Limit :: non_neg_integer())  -> [{any(), string(), string(), string()}].
-latest(Limit) -> banker_vault:latest(Limit).
+-spec events(Limit :: non_neg_integer())  -> [{any(), string(), string(), string()}].
+events(Limit) -> banker_vault:events(Limit).
+
+-spec count_events() -> non_neg_integer().
+count_events() -> banker_atm:count_events().
