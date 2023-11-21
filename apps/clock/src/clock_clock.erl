@@ -39,9 +39,8 @@ handle_cast(_Request, State) ->
 
 handle_info('tick', #state{domains = OldDomains}) ->
     schedule('tick', ?TICK_SECONDS),
-    dict:map(fun process_expired_domains/2, OldDomains),
-    NewDomains = dict:map(fun tick_domain/2, OldDomains),
-    {noreply, #state{ domains = NewDomains }};
+    dict:map(fun lookup_expired_domains/2, OldDomains),
+    {noreply, #state{ domains = dict:map(fun tick_domain/2, OldDomains) }};
 handle_info(_Info, State) ->
     {noreply, State}.
 
@@ -66,9 +65,9 @@ format_status(_Opt, Status) -> Status.
 schedule(Msg, Seconds) ->
     erlang:send_after(timer:seconds(Seconds), erlang:self(), Msg).
 
--spec process_expired_domains(Domain::string(), Timeout::integer()) -> ok.
-process_expired_domains(Domain, Timeout) ->
-    case conman:is_connected() and (Timeout < 0) of
+-spec lookup_expired_domains(Domain :: string(), Timeout :: integer()) -> ok.
+lookup_expired_domains(Domain, Timeout) ->
+    case Timeout < 0 of
         true  -> sheriff:lookup(Domain);
         false -> ok
     end.

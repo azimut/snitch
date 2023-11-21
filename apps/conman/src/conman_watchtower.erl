@@ -17,9 +17,10 @@
 -type connection_status() :: 'connected' | 'disconnected'.
 -type connection_event() :: {connection_status(), calendar:datetime()}.
 
--record(state, {status = 'disconnected' :: connection_status()
-               ,disconnections = 0 :: non_neg_integer()
-               ,events = [] :: [connection_event()]}).
+-record(state, { status = 'disconnected' :: connection_status()
+               , disconnections = 0 :: non_neg_integer()
+               , events = [] :: [connection_event()]}).
+
 
 -spec get_disconnections() -> non_neg_integer().
 get_disconnections() -> gen_server:call(?MODULE, 'get_disconnections').
@@ -35,6 +36,7 @@ is_connected() -> gen_server:call(?SERVER, 'is_connected').
 
 -spec is_disconnected() -> boolean().
 is_disconnected() -> gen_server:call(?SERVER, 'is_disconnected').
+
 
 start_link() ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
@@ -66,6 +68,7 @@ handle_cast('disconnect', #state{ status = 'connected'
                          , disconnections = Disconnections + 1}};
 handle_cast(_Request, State) ->
     {noreply, State}.
+
 
 handle_info(_Info, State)           -> {noreply, State}.
 terminate(_Reason, _State)          -> ok.

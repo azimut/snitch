@@ -5,11 +5,17 @@
 -export([start_link/0]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3, format_status/2]).
+-export([check_connectivity/0]).
 
 -define(SERVER, ?MODULE).
 -define(TICK_INTERVAL_SECONDS, 10 * 60).
 
 -record(state, {}).
+
+
+-spec check_connectivity() -> ok.
+check_connectivity() -> gen_server:cast(?MODULE, 'check_connectivity'). % FIXME: rate limit check_connectivity
+
 
 start_link() ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
@@ -50,6 +56,3 @@ format_status(_Opt, Status)         -> Status.
 -spec schedule(Msg :: atom(), Seconds :: non_neg_integer()) -> reference().
 schedule(Msg, Seconds) ->
     erlang:send_after(timer:seconds(Seconds), erlang:self(), Msg).
-
--spec check_connectivity() -> ok.
-check_connectivity() -> gen_server:cast(?MODULE, 'check_connectivity').
