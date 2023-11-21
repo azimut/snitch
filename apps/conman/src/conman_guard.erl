@@ -24,6 +24,7 @@ init([]) ->
     process_flag(trap_exit, true),
     {ok, #state{}}.
 
+
 handle_call('check_connectivity', _From, #state{ lastcheck = Lastcheck }) ->
     logger:notice("checking internet connectivity..."),
     Now = now_seconds(),

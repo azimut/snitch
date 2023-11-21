@@ -18,7 +18,7 @@
 -type connection_status() :: 'connected' | 'disconnected'.
 -type connection_event() :: {connection_status(), calendar:datetime()}.
 
--record(state, { status = 'disconnected' :: connection_status()
+-record(state, { status = 'connected' :: connection_status()
                , disconnections = 0 :: non_neg_integer()
                , events = [] :: [connection_event()]}).
 
@@ -52,6 +52,7 @@ start_link() ->
 init([]) ->
     process_flag(trap_exit, true),
     {ok, #state{}}.
+
 
 handle_call('status', _From, #state{ status = Status } = State) ->
     {reply, Status, State};
