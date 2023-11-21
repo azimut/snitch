@@ -13,8 +13,8 @@
 -record(state, { lastcheck = 0 :: integer() }).
 
 
--spec check_connectivity() -> ok.
-check_connectivity() -> gen_server:cast(?MODULE, 'check_connectivity').
+-spec check_connectivity() -> conman_watchtower:connection_status().
+check_connectivity() -> gen_server:call(?MODULE, 'check_connectivity').
 
 
 start_link() ->
@@ -22,28 +22,31 @@ start_link() ->
 
 init([]) ->
     process_flag(trap_exit, true),
-    check_connectivity(),
     {ok, #state{}}.
 
-
-handle_cast('check_connectivity', #state{ lastcheck = Lastcheck }) ->
+handle_call('check_connectivity', _From, #state{ lastcheck = Lastcheck }) ->
     logger:notice("checking internet connectivity..."),
     Now = now_seconds(),
     HasExpired = (Now - Lastcheck) > ?CHECK_COOLDOWN_SECONDS,
-    case HasExpired of
-        true  -> run_check();
-        false -> ok
-    end,
-    {noreply, #state{ lastcheck = case HasExpired of
-                                      true  -> Now;
-                                      false -> Lastcheck
-                                  end }};
-handle_cast(_Request, State) ->
-    {noreply, State}.
+    Reply = case HasExpired of
+                true  ->
+                    case inet_res:gethostbyname("google.com") of
+                        {ok, _}    -> conman_watchtower:connect();
+                        {error, _} -> conman_watchtower:disconnect()
+                    end;
+                false ->
+                    conman_watchtower:status()
+            end,
+    {reply, Reply, #state{ lastcheck = case HasExpired of
+                                           true  -> Now;
+                                           false -> Lastcheck
+                                       end }};
+handle_call(_Request, _From, State) ->
+    {reply, ok, State}.
 
 
+handle_cast(_Request, State)        -> {noreply, State}.
 handle_info(_Info, State)           -> {noreply, State}.
-handle_call(_Request, _From, State) -> {reply, ok, State}.
 terminate(_Reason, _State)          -> ok.
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
 format_status(_Opt, Status)         -> Status.
@@ -54,10 +57,3 @@ format_status(_Opt, Status)         -> Status.
 
 -spec now_seconds() -> integer().
 now_seconds() -> erlang:convert_time_unit(os:system_time(), native, second).
-
--spec run_check() -> ok.
-run_check() ->
-    case inet_res:gethostbyname("google.com") of
-        {ok, _}    -> conman_watchtower:connect();
-        {error, _} -> conman_watchtower:disconnect()
-    end.

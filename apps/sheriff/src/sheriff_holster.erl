@@ -47,8 +47,10 @@ handle_info({ok, #results{qtype=QType,rtype=RType,domain=Domain,server=NS,answer
     lists:foreach(fun (Answer) -> banker:insert(Domain, NS, QType, RType, Answer) end, Answers),
     {noreply, State};
 handle_info({error, #error{qtype=QType,server=NS,domain=Domain,reason='timeout'}}, State) ->
-    conman:check_connectivity(),
-    banker:insert_error(Domain, QType, NS, 'timeout'), % FIXME: timeout gets recorded, regardles of connection status at least once
+    case conman:check_connectivity() of
+        'connected'    -> banker:insert_error(Domain, QType, NS, 'timeout');
+        'disconnected' -> ok
+    end,
     {noreply, State};
 handle_info({error, #error{qtype=QType,server=NS,domain=Domain,reason=Reason}}, State) ->
     banker:insert_error(Domain, QType, NS, Reason),

@@ -10,7 +10,8 @@
         ,is_disconnected/0
         ,connect/0
         ,disconnect/0
-        ,get_disconnections/0]).
+        ,get_disconnections/0
+        ,status/0]).
 
 -define(SERVER, ?MODULE).
 
@@ -22,14 +23,21 @@
                , events = [] :: [connection_event()]}).
 
 
+-spec status() -> connection_status().
+status() -> gen_server:call(?MODULE, 'status').
+
 -spec get_disconnections() -> non_neg_integer().
 get_disconnections() -> gen_server:call(?MODULE, 'get_disconnections').
 
--spec connect() -> ok.
-connect() -> gen_server:cast(?MODULE, 'connect').
+-spec connect() -> 'connected'.
+connect() ->
+    gen_server:cast(?MODULE, 'connect'),
+    'connected'.
 
--spec disconnect() -> ok.
-disconnect() -> gen_server:cast(?MODULE, 'disconnect').
+-spec disconnect() -> 'disconnected'.
+disconnect() ->
+    gen_server:cast(?MODULE, 'disconnect'),
+    'disconnected'.
 
 -spec is_connected() -> boolean().
 is_connected() -> gen_server:call(?SERVER, 'is_connected').
@@ -45,7 +53,8 @@ init([]) ->
     process_flag(trap_exit, true),
     {ok, #state{}}.
 
-
+handle_call('status', _From, #state{ status = Status } = State) ->
+    {reply, Status, State};
 handle_call('get_disconnections', _From, #state{disconnections = Disconnections} = State) ->
     {reply, Disconnections, State};
 handle_call('is_connected', _From, #state{status=Status} = State) ->
