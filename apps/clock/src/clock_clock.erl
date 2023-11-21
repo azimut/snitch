@@ -13,7 +13,7 @@
 
 -spec get_state() -> [{string(), non_neg_integer()}].
 get_state() ->
-    {ok, State} = gen_server:call(?MODULE, get_state),
+    {ok, State} = gen_server:call(?MODULE, 'get_state'),
     State.
 
 %% ==============================
@@ -23,32 +23,37 @@ start_link() ->
 
 init([]) ->
     process_flag(trap_exit, true),
-    schedule(tick, ?TICK_SECONDS),
+    schedule('tick', ?TICK_SECONDS),
     Domains = banker:domains(),
     lists:foreach(fun add/1, Domains),
     {ok, #state{}}.
 
-handle_cast({add, Domain}, #state{domains = Domains}) ->
-    NewDomains = dict:store(Domain, next_timeout(), Domains),
-    {noreply, #state{domains = NewDomains}};
-handle_cast({del, Domain}, #state{domains = Domains}) ->
-    NewDomains = dict:erase(Domain, Domains),
-    {noreply, #state{domains = NewDomains}};
+
+handle_cast({'add', Domain}, #state{domains = Domains}) ->
+    {noreply, #state{ domains = dict:store(Domain, next_timeout(), Domains) }};
+handle_cast({'del', Domain}, #state{domains = Domains}) ->
+    {noreply, #state{ domains = dict:erase(Domain, Domains) }};
 handle_cast(_Request, State) ->
     {noreply, State}.
 
-handle_info(tick, #state{domains = Old}) ->
-    schedule(tick, ?TICK_SECONDS),
-    New = dict:map(fun tick_domain/2, Old),
-    {noreply, #state{domains = New}};
+
+handle_info('tick', #state{domains = OldDomains}) ->
+    schedule('tick', ?TICK_SECONDS),
+    dict:map(fun process_expired_domains/2, OldDomains),
+    NewDomains = dict:map(fun tick_domain/2, OldDomains),
+    {noreply, #state{ domains = NewDomains }};
 handle_info(_Info, State) ->
     {noreply, State}.
 
-handle_call(get_state, _From, #state{domains = Domains}=State) ->
+
+handle_call('get_state', _From, #state{domains = Domains}=State) ->
     Ds = dict:to_list(Domains),
     SortedDs = lists:sort(fun ({_,T1}, {_,T2}) -> T1 < T2 end, Ds),
     {reply, {ok, SortedDs}, State};
-handle_call(_Request, _From, State) -> {reply, ok, State}.
+handle_call(_Request, _From, State) ->
+    {reply, ok, State}.
+
+
 terminate(_Reason, _State) -> ok.
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
 format_status(_Opt, Status) -> Status.
@@ -61,12 +66,18 @@ format_status(_Opt, Status) -> Status.
 schedule(Msg, Seconds) ->
     erlang:send_after(timer:seconds(Seconds), erlang:self(), Msg).
 
--spec tick_domain(Domain :: string(), Timeout :: non_neg_integer()) -> non_neg_integer().
-tick_domain(Domain, Timeout) ->
+-spec process_expired_domains(Domain::string(), Timeout::integer()) -> ok.
+process_expired_domains(Domain, Timeout) ->
+    case conman:is_connected() and (Timeout < 0) of
+        true  -> sheriff:lookup(Domain);
+        false -> ok
+    end.
+
+-spec tick_domain(_Domain :: string(), Timeout :: integer()) -> integer().
+tick_domain(_Domain, Timeout) ->
     case Timeout > 0 of
         true  -> Timeout - ?TICK_SECONDS;
-        false -> sheriff:lookup(Domain),% !!
-                 next_timeout()
+        false -> next_timeout()
     end.
 
 -spec next_timeout() -> non_neg_integer().
@@ -78,4 +89,4 @@ random_between(Min, Max)
     rand:uniform(Max - Min + 1) + Min.
 
 -spec add(Domain :: string()) -> ok.
-add(Domain) -> gen_server:cast(?MODULE, {add, Domain}).
+add(Domain) -> gen_server:cast(?MODULE, {'add', Domain}).

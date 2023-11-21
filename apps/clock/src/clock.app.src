@@ -6,7 +6,8 @@
   {applications,
    [kernel,
     stdlib,
-    sheriff
+    sheriff,
+    conman
    ]},
   {env,[]},
   {modules, []},
