@@ -8,12 +8,13 @@
 -export([check_connectivity/0]).
 
 -define(SERVER, ?MODULE).
+-define(CHECK_COOLDOWN_SECONDS, 5 * 60).
 
--record(state, {}).
+-record(state, { lastcheck = 0 :: integer() }).
 
 
 -spec check_connectivity() -> ok.
-check_connectivity() -> gen_server:cast(?MODULE, 'check_connectivity'). % FIXME: rate limit check_connectivity
+check_connectivity() -> gen_server:cast(?MODULE, 'check_connectivity').
 
 
 start_link() ->
@@ -25,13 +26,18 @@ init([]) ->
     {ok, #state{}}.
 
 
-handle_cast('check_connectivity', State) ->
+handle_cast('check_connectivity', #state{ lastcheck = Lastcheck }) ->
     logger:notice("checking internet connectivity..."),
-    case inet_res:gethostbyname("google.com") of
-        {ok, _}    -> conman_watchtower:connect();
-        {error, _} -> conman_watchtower:disconnect()
+    Now = now_seconds(),
+    HasExpired = (Now - Lastcheck) > ?CHECK_COOLDOWN_SECONDS,
+    case HasExpired of
+        true  -> run_check();
+        false -> ok
     end,
-    {noreply, State};
+    {noreply, #state{ lastcheck = case HasExpired of
+                                      true  -> Now;
+                                      false -> Lastcheck
+                                  end }};
 handle_cast(_Request, State) ->
     {noreply, State}.
 
@@ -41,3 +47,17 @@ handle_call(_Request, _From, State) -> {reply, ok, State}.
 terminate(_Reason, _State)          -> ok.
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
 format_status(_Opt, Status)         -> Status.
+
+%%%===================================================================
+%%% Internal functions
+%%%===================================================================
+
+-spec now_seconds() -> integer().
+now_seconds() -> erlang:convert_time_unit(os:system_time(), native, second).
+
+-spec run_check() -> ok.
+run_check() ->
+    case inet_res:gethostbyname("google.com") of
+        {ok, _}    -> conman_watchtower:connect();
+        {error, _} -> conman_watchtower:disconnect()
+    end.
