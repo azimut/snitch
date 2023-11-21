@@ -8,7 +8,6 @@
 -export([check_connectivity/0]).
 
 -define(SERVER, ?MODULE).
--define(TICK_INTERVAL_SECONDS, 10 * 60).
 
 -record(state, {}).
 
@@ -22,11 +21,12 @@ start_link() ->
 
 init([]) ->
     process_flag(trap_exit, true),
-    schedule('tick', 0),
+    check_connectivity(),
     {ok, #state{}}.
 
 
 handle_cast('check_connectivity', State) ->
+    logger:notice("checking internet connectivity..."),
     case inet_res:gethostbyname("google.com") of
         {ok, _}    -> conman_watchtower:connect();
         {error, _} -> conman_watchtower:disconnect()
@@ -36,23 +36,8 @@ handle_cast(_Request, State) ->
     {noreply, State}.
 
 
-handle_info('tick', State) ->
-    schedule('tick', ?TICK_INTERVAL_SECONDS),
-    check_connectivity(),
-    {noreply, State};
-handle_info(_Info, State) ->
-    {noreply, State}.
-
-
+handle_info(_Info, State)           -> {noreply, State}.
 handle_call(_Request, _From, State) -> {reply, ok, State}.
 terminate(_Reason, _State)          -> ok.
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
 format_status(_Opt, Status)         -> Status.
-
-%%%===================================================================
-%%% Internal functions
-%%%===================================================================
-
--spec schedule(Msg :: atom(), Seconds :: non_neg_integer()) -> reference().
-schedule(Msg, Seconds) ->
-    erlang:send_after(timer:seconds(Seconds), erlang:self(), Msg).

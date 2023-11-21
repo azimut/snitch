@@ -58,11 +58,13 @@ handle_call(_Request, _From, State) ->
 
 handle_cast('connect', #state{ status = 'disconnected'
                              , events = Events} = State) ->
+    logger:notice("connected! :)"),
     {noreply, State#state{ status = 'connected'
                          , events = [{'connected', erlang:localtime()} | Events]}};
 handle_cast('disconnect', #state{ status = 'connected'
                                 , disconnections = Disconnections
                                 , events = Events} = State) ->
+    logger:notice("disconnected! :("),
     {noreply, State#state{ status = 'disconnected'
                          , events = [{'disconnected', erlang:localtime()} | Events]
                          , disconnections = Disconnections + 1}};
